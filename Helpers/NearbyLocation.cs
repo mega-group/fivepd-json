@@ -1,5 +1,6 @@
 ﻿using System;
 using CitizenFX.Core;
+using CitizenFX.Core.Native;
 
 namespace fivepd_json.Helpers
 {
@@ -24,6 +25,41 @@ namespace fivepd_json.Helpers
                 origin.Y + rand.Next(100, 500),
                 origin.Z
             );
+        }
+        public static Vector3 GetSafeRandomNearbyLocation(Vector3 origin)
+        {
+            var rand = new Random();
+
+            for (int i = 0; i < 10; i++)
+            {
+                double angle = rand.NextDouble() * Math.PI * 2;
+                double distance = rand.Next(30, 80); // realistic distance
+
+                float x = origin.X + (float)(Math.Cos(angle) * distance);
+                float y = origin.Y + (float)(Math.Sin(angle) * distance);
+                float z = origin.Z;
+
+                Vector3 safeCoord = new Vector3();
+                bool found = API.GetSafeCoordForPed(x, y, z, true, ref safeCoord, 0);
+
+                if (found)
+                {
+                    return safeCoord;
+                }
+            }
+
+            // Fallback: use original origin
+            return origin;
+        }
+        public static Vector3 GetSafeRandomLocationNearby()
+        {
+            var pos = Game.Player.Character?.Position ?? new Vector3(0f, 0f, 72f);
+            return GetSafeRandomNearbyLocation(pos);
+        }
+
+        public static Vector3 GetSafeRandomLocationNearby(Vector3 origin)
+        {
+            return GetSafeRandomNearbyLocation(origin);
         }
     }
 }

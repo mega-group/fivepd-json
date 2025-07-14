@@ -27,7 +27,7 @@ namespace fivepd.json
 
         public JsonBridge()
         {
-            finalLocation = GetRandomNearbyLocation();
+            finalLocation = NearbyLocation.GetSafeRandomLocationNearby();
             InitInfo(finalLocation);
 
             ShortName = "json-dynamic";
@@ -54,9 +54,9 @@ namespace fivepd.json
         public override async Task OnAccept()
         {
             // These values will be shown in the callout UI
-            ShortName = config.shortName;
+            ShortName = $"{config.shortName}";
             ResponseCode = config.responseCode;
-            CalloutDescription = config.description;
+            CalloutDescription = $"{config.description}";
             Location = finalLocation;
 
             UpdateData();
@@ -80,11 +80,15 @@ namespace fivepd.json
         {
             base.OnStart(closest);
 
+            // Assign the closest player to the callout (important in multiplayer too)
+            if (closest.NetworkId != Game.PlayerPed.NetworkId)
+            {
+                this.AssignedPlayers.Add(closest);
+            }
+
             Debug.WriteLine("[JsonBridge] Player has arrived on scene.");
 
-            // No spawning or main logic here
-            // You could remove the blip or trigger animations/dialogue
-
+            // Monitor logic (not spawning!)
             if (config.autoEnd)
             {
                 suspectMonitorTickHandler = async () =>
@@ -100,6 +104,7 @@ namespace fivepd.json
                 Tick += suspectMonitorTickHandler;
             }
         }
+
 
         public override void OnCancelBefore()
         {
@@ -124,21 +129,6 @@ namespace fivepd.json
         public override void OnCancelAfter()
         {
             // Typically not needed unless you want to clean up later things
-        }
-
-        private Vector3 GetRandomNearbyLocation()
-        {
-            var pos = Game.Player.Character?.Position ?? new Vector3(0f, 0f, 72f);
-            var rand = new Random();
-
-            double angle = rand.NextDouble() * Math.PI * 2;
-            double distance = rand.Next(20, 60);
-
-            float x = pos.X + (float)(Math.Cos(angle) * distance);
-            float y = pos.Y + (float)(Math.Sin(angle) * distance);
-            float z = pos.Z;
-
-            return new Vector3(x, y, z);
         }
     }
 }
