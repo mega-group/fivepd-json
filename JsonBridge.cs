@@ -18,21 +18,23 @@ namespace fivepd.json
         private CalloutConfig config;
         private Vector3 finalLocation;
         private Ped suspect;
-        private Vehicle suspectVehicle;
         private bool isCalloutFinished = false;
 
         private List<Ped> spawnedSuspects = new List<Ped>();
         private List<Ped> spawnedVictims = new List<Ped>();
 
+        private Func<Task> suspectMonitorTickHandler;
+
         public JsonBridge()
         {
-            InitInfo(Location);
+            finalLocation = GetRandomNearbyLocation();
+            InitInfo(finalLocation);
+
             ShortName = "json-dynamic";
             CalloutDescription = "Default dynamic scenario.";
             ResponseCode = 2;
 
-            finalLocation = GetRandomNearbyLocation();
-            Location = finalLocation;
+            InitBlip(); // Show marker immediately
 
             config = JsonConfigManager.GetRandomConfig() ?? new CalloutConfig
             {
@@ -47,16 +49,11 @@ namespace fivepd.json
             };
 
             Debug.WriteLine($"[JsonBridge] Selected config: {config.shortName}");
-            Debug.WriteLine($"[JsonBridge] Selected config DATA: {config.shortName}, {config.description}, {config.responseCode}, {config.pedModel}, {config.weapon}, {config.behavior}, {config.vehicleModel}, {config.heading}");
         }
 
         public override async Task OnAccept()
         {
-            base.InitBlip();
-
-            Debug.WriteLine($"[JsonBridge] Using config: {config.shortName}");
-            Debug.WriteLine($"[JsonBridge] Using config DATA: {config.shortName}, {config.description}, {config.responseCode}, {config.pedModel}, {config.weapon}, {config.behavior}, {config.vehicleModel}, {config.heading}");
-
+            // These values will be shown in the callout UI
             ShortName = config.shortName;
             ResponseCode = config.responseCode;
             CalloutDescription = config.description;
@@ -64,12 +61,11 @@ namespace fivepd.json
 
             UpdateData();
 
+            Debug.WriteLine($"[JsonBridge] Callout accepted with config: {config.shortName}");
+
             if (config.suspects?.Count > 0)
             {
-                // Use the Logic.SpawnSuspects class to spawn suspects
                 spawnedSuspects = await SpawnSuspects.FromConfig(config.suspects);
-
-                // Assign main suspect for monitoring, e.g., the first spawned
                 if (spawnedSuspects.Count > 0)
                     suspect = spawnedSuspects[0];
             }
@@ -80,13 +76,14 @@ namespace fivepd.json
             }
         }
 
-        private Func<Task> suspectMonitorTickHandler;
-
         public override void OnStart(Ped closest)
         {
             base.OnStart(closest);
 
-            Debug.WriteLine("[JsonBridge] Callout started by player");
+            Debug.WriteLine("[JsonBridge] Player has arrived on scene.");
+
+            // No spawning or main logic here
+            // You could remove the blip or trigger animations/dialogue
 
             if (config.autoEnd)
             {
@@ -102,17 +99,6 @@ namespace fivepd.json
 
                 Tick += suspectMonitorTickHandler;
             }
-        }
-
-        private Vector3 GetRandomNearbyLocation()
-        {
-            var pos = Game.Player.Character?.Position ?? new Vector3(0f, 0f, 72f);
-            var rand = new Random();
-            return new Vector3(
-                pos.X + rand.Next(100, 500),
-                pos.Y + rand.Next(100, 500),
-                pos.Z
-            );
         }
 
         public override void OnCancelBefore()
@@ -131,12 +117,28 @@ namespace fivepd.json
                 Tick -= suspectMonitorTickHandler;
                 suspectMonitorTickHandler = null;
             }
-            Debug.WriteLine("[JsonBridge] Cleaning up all entities has completed.");
+
+            Debug.WriteLine("[JsonBridge] Entity cleanup complete.");
         }
 
         public override void OnCancelAfter()
         {
-            // most of the spawned entities are null at this point
+            // Typically not needed unless you want to clean up later things
+        }
+
+        private Vector3 GetRandomNearbyLocation()
+        {
+            var pos = Game.Player.Character?.Position ?? new Vector3(0f, 0f, 72f);
+            var rand = new Random();
+
+            double angle = rand.NextDouble() * Math.PI * 2;
+            double distance = rand.Next(20, 60);
+
+            float x = pos.X + (float)(Math.Cos(angle) * distance);
+            float y = pos.Y + (float)(Math.Sin(angle) * distance);
+            float z = pos.Z;
+
+            return new Vector3(x, y, z);
         }
     }
 }
