@@ -53,7 +53,16 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Class1.cs" />
+    <Compile Include="Behavior\SuspectBehavior.cs" />
+    <Compile Include="Helpers\MonitorSuspectState.cs" />
+    <Compile Include="Helpers\NearbyLocation.cs" />
+    <Compile Include="JsonBridge.cs" />
+    <Compile Include="Loader\JsonConfigManager.cs" />
+    <Compile Include="Logic\SpawnSuspects.cs" />
+    <Compile Include="Logic\SpawnVictims.cs" />
+    <Compile Include="models\CalloutConfig.cs" />
+    <Compile Include="models\SuspectConfig.cs" />
+    <Compile Include="models\VictimConfig.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
