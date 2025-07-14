@@ -15,7 +15,7 @@ namespace fivepd_json.Logic
     public static class SpawnSuspects
     {
         public static Dictionary<Ped, string> BehaviorMap = new Dictionary<Ped, string>();
-        public static async Task<List<SpawnedSuspect>> FromConfig(List<SuspectConfig> configs, Vector3 center)
+        public static async Task<List<SpawnedSuspect>> FromConfig(List<SuspectConfig> configs, Vector3 spawnLocation)
         {
             var suspects = new List<SpawnedSuspect>();
 
@@ -25,7 +25,7 @@ namespace fivepd_json.Logic
                 await pedModel.Request(3000);
                 if (!pedModel.IsLoaded) continue;
 
-                var ped = await World.CreatePed(pedModel, NearbyLocation.GetRandomNearbyLocation(center));
+                var ped = await World.CreatePed(pedModel, NearbyLocation.GetRandomNearbyLocation(spawnLocation));
                 ped.BlockPermanentEvents = true;
                 ped.AlwaysKeepTask = true;
                 ped.AttachBlip();
