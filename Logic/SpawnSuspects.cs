@@ -14,7 +14,7 @@ namespace fivepd_json.Logic
 {
     public static class SpawnSuspects
     {
-        public static async Task<List<Ped>> FromConfig(List<SuspectConfig> configs)
+        public static async Task<List<Ped>> FromConfig(List<SuspectConfig> configs, Vector3 origin)
         {
             List<Ped> suspects = new List<Ped>();
 
@@ -24,7 +24,7 @@ namespace fivepd_json.Logic
                 await pedModel.Request(3000);
                 if (!pedModel.IsLoaded) continue;
 
-                var ped = await World.CreatePed(pedModel, NearbyLocation.GetRandomNearbyLocation());
+                var ped = await World.CreatePed(pedModel, NearbyLocation.GetRandomNearbyLocation(origin));
                 suspects.Add(ped);
 
                 ped.BlockPermanentEvents = true;
@@ -62,5 +62,40 @@ namespace fivepd_json.Logic
             };
             return models[new System.Random().Next(models.Length)];
         }
+        public static async Task<Ped> SpawnSingleSuspect(CalloutConfig config, Vector3 spawnLocation)
+        {
+            var pedModel = new Model(config.pedModel ?? GetRandomPedModel());
+            await pedModel.Request(3000);
+            if (!pedModel.IsLoaded) return null;
+
+            var ped = await World.CreatePed(pedModel, spawnLocation);
+
+            ped.BlockPermanentEvents = true;
+            ped.AlwaysKeepTask = true;
+            ped.AttachBlip();
+
+            if (!string.IsNullOrEmpty(config.weapon))
+            {
+                var weaponHash = (WeaponHash)API.GetHashKey(config.weapon);
+                ped.Weapons.Give(weaponHash, 60, true, true);
+            }
+
+            if (!string.IsNullOrEmpty(config.vehicleModel))
+            {
+                var vehicleModel = new Model(config.vehicleModel);
+                await vehicleModel.Request(3000);
+                if (vehicleModel.IsLoaded)
+                {
+                    var vehicle = await Utilities.SpawnVehicle(vehicleModel, ped.Position, config.heading);
+                    Utilities.ExcludeVehicleFromTrafficStop(vehicle.NetworkId, true);
+                    ped.SetIntoVehicle(vehicle, VehicleSeat.Driver);
+                }
+            }
+
+            SuspectBehavior.HandleBehavior(ped, config.behavior);
+
+            return ped;
+        }
+
     }
 }

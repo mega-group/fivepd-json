@@ -19,5 +19,7 @@ namespace fivepd_json.models
         public bool autoEnd { get; set; } = true;
         public List<SuspectConfig> suspects { get; set; }
         public List<VictimConfig> victims { get; set; }
+        public LocationData location { get; set; }
+        public List<LocationData> locations { get; set; }
     }
 }

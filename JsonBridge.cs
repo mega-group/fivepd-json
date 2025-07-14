@@ -27,12 +27,14 @@ namespace fivepd.json
 
         public JsonBridge()
         {
-            finalLocation = NearbyLocation.GetSafeRandomLocationNearby();
-            InitInfo(finalLocation);
+            finalLocation = NearbyLocation.GetSafeRandomLocationFarAway();
+            Location = finalLocation;
+            InitInfo(Location);
 
             ShortName = "json-dynamic";
             CalloutDescription = "Default dynamic scenario.";
             ResponseCode = 2;
+            StartDistance = 50f;
 
             InitBlip(); // Show marker immediately
 
@@ -57,18 +59,27 @@ namespace fivepd.json
             ShortName = $"{config.shortName}";
             ResponseCode = config.responseCode;
             CalloutDescription = $"{config.description}";
-            Location = finalLocation;
 
             UpdateData();
 
             Debug.WriteLine($"[JsonBridge] Callout accepted with config: {config.shortName}");
 
-            if (config.suspects?.Count > 0)
+            if (config.suspects != null && config.suspects.Count > 0)
             {
-                spawnedSuspects = await SpawnSuspects.FromConfig(config.suspects);
+                spawnedSuspects = await SpawnSuspects.FromConfig(config.suspects, finalLocation);
                 if (spawnedSuspects.Count > 0)
                     suspect = spawnedSuspects[0];
             }
+            else if (!string.IsNullOrEmpty(config.pedModel))
+            {
+                var singleSuspect = await SpawnSuspects.SpawnSingleSuspect(config, finalLocation);
+                if (singleSuspect != null)
+                {
+                    spawnedSuspects.Add(singleSuspect);
+                    suspect = singleSuspect;
+                }
+            }
+
 
             if (config.victims?.Count > 0)
             {
