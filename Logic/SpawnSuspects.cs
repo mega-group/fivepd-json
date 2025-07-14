@@ -14,9 +14,10 @@ namespace fivepd_json.Logic
 {
     public static class SpawnSuspects
     {
-        public static async Task<List<Ped>> FromConfig(List<SuspectConfig> configs, Vector3 origin)
+        public static Dictionary<Ped, string> BehaviorMap = new Dictionary<Ped, string>();
+        public static async Task<List<SpawnedSuspect>> FromConfig(List<SuspectConfig> configs, Vector3 center)
         {
-            List<Ped> suspects = new List<Ped>();
+            var suspects = new List<SpawnedSuspect>();
 
             foreach (var cfg in configs)
             {
@@ -24,9 +25,7 @@ namespace fivepd_json.Logic
                 await pedModel.Request(3000);
                 if (!pedModel.IsLoaded) continue;
 
-                var ped = await World.CreatePed(pedModel, NearbyLocation.GetRandomNearbyLocation(origin));
-                suspects.Add(ped);
-
+                var ped = await World.CreatePed(pedModel, NearbyLocation.GetRandomNearbyLocation(center));
                 ped.BlockPermanentEvents = true;
                 ped.AlwaysKeepTask = true;
                 ped.AttachBlip();
@@ -49,10 +48,16 @@ namespace fivepd_json.Logic
                     }
                 }
 
-                SuspectBehavior.HandleBehavior(ped, cfg.behavior);
+                suspects.Add(new SpawnedSuspect { Ped = ped, Behavior = cfg.behavior });
             }
 
             return suspects;
+        }
+
+        public class SpawnedSuspect
+        {
+            public Ped Ped { get; set; }
+            public string Behavior { get; set; }
         }
 
         private static string GetRandomPedModel()
@@ -62,7 +67,7 @@ namespace fivepd_json.Logic
             };
             return models[new System.Random().Next(models.Length)];
         }
-        public static async Task<Ped> SpawnSingleSuspect(CalloutConfig config, Vector3 spawnLocation)
+        public static async Task<SpawnedSuspect> SpawnSingleSuspect(CalloutConfig config, Vector3 spawnLocation)
         {
             var pedModel = new Model(config.pedModel ?? GetRandomPedModel());
             await pedModel.Request(3000);
@@ -92,9 +97,11 @@ namespace fivepd_json.Logic
                 }
             }
 
-            SuspectBehavior.HandleBehavior(ped, config.behavior);
-
-            return ped;
+            return new SpawnedSuspect
+            {
+                Ped = ped,
+                Behavior = config.behavior
+            };
         }
 
     }

@@ -9,6 +9,7 @@ using fivepd_json.Loader;
 using fivepd_json.Logic;
 using fivepd_json.models;
 using static CitizenFX.Core.Native.API;
+using static fivepd_json.Logic.SpawnSuspects;
 
 namespace fivepd.json
 {
@@ -20,7 +21,7 @@ namespace fivepd.json
         private Ped suspect;
         private bool isCalloutFinished = false;
 
-        private List<Ped> spawnedSuspects = new List<Ped>();
+        private List<SpawnedSuspect> spawnedSuspects = new List<SpawnedSuspect>();
         private List<Ped> spawnedVictims = new List<Ped>();
 
         private Func<Task> suspectMonitorTickHandler;
@@ -68,7 +69,7 @@ namespace fivepd.json
             {
                 spawnedSuspects = await SpawnSuspects.FromConfig(config.suspects, finalLocation);
                 if (spawnedSuspects.Count > 0)
-                    suspect = spawnedSuspects[0];
+                    suspect = spawnedSuspects[0].Ped;
             }
             else if (!string.IsNullOrEmpty(config.pedModel))
             {
@@ -76,7 +77,7 @@ namespace fivepd.json
                 if (singleSuspect != null)
                 {
                     spawnedSuspects.Add(singleSuspect);
-                    suspect = singleSuspect;
+                    suspect = singleSuspect.Ped;
                 }
             }
 
@@ -91,7 +92,6 @@ namespace fivepd.json
         {
             base.OnStart(closest);
 
-            // Assign the closest player to the callout (important in multiplayer too)
             if (closest.NetworkId != Game.PlayerPed.NetworkId)
             {
                 this.AssignedPlayers.Add(closest);
@@ -99,8 +99,16 @@ namespace fivepd.json
 
             Debug.WriteLine("[JsonBridge] Player has arrived on scene.");
 
-            // Monitor logic (not spawning!)
-            if (config.autoEnd)
+            // Activate behavior now that player is on scene
+            foreach (var s in spawnedSuspects)
+            {
+                if (!string.IsNullOrEmpty(s.Behavior))
+                {
+                    SuspectBehavior.HandleBehavior(s.Ped, s.Behavior);
+                }
+            }
+
+            if (config.autoEnd && suspect != null)
             {
                 suspectMonitorTickHandler = async () =>
                 {
@@ -122,11 +130,15 @@ namespace fivepd.json
             base.OnCancelBefore();
             Debug.WriteLine("[JsonBridge] Cleaning up all entities.");
 
-            foreach (var ped in spawnedSuspects)
-                if (ped.Exists()) ped.Delete();
+            foreach (var s in spawnedSuspects)
+            {
+                if (s.Ped.Exists()) s.Ped.Delete();
+            }
 
-            foreach (var ped in spawnedVictims)
-                if (ped.Exists()) ped.Delete();
+            foreach (var v in spawnedVictims)
+            {
+                if (v.Exists()) v.Delete();
+            }
 
             if (suspectMonitorTickHandler != null)
             {
