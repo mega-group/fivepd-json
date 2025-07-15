@@ -9,6 +9,8 @@
       "name": "Burglary in Progress",
       "description": "Respond to reports of a burglary at a local residence.",
       "downloadURL": "https://mega-group.github.io/fivepd-json/"
+      "image": "",
+      "searchTerms": ["burglary", "theft", "house", "property", "intruder"]
     },
     {
       "name": "Traffic Stop Backup",
