@@ -154,10 +154,6 @@ namespace fivepd.json
         {
             // FOR LATER USE
         }
-        public override void OnPlayerRevokedBackup(Player player)
-        {
-            // event logic
-        }
         public override void OnBackupCalled(int code)
         {
             // event logic
