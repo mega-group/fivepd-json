@@ -8,7 +8,8 @@
   </head>
   <body>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js" integrity="sha384-ndDqU0Gzau9qJ1lfW4pNLlhNTkCfHzAVBReH9diLvGRem5+R9g2FzA8ZGN954O5Q" crossorigin="anonymous"></script>
-  <div class="container mt-5">
+  <body class="bg-dark text-white">
+    <div class="container mt-5">
     <h1 class="mb-4">FivePD JSON Callouts</h1>
     <div id="calloutList" class="row"></div>
   </div>
@@ -18,14 +19,33 @@
       .then(response => response.json())
       .then(data => {
         const container = document.getElementById('calloutList');
+        const currentVersion = parseFloat(data.fivepd_json_version);
         
         data.callouts.forEach(callout => {
+          let badgeColor = 'bg-success'; // default: green
+
+      const calloutVersion = parseFloat(callout.fivepd_json_version ?? '1.0');
+      let badgeColor = 'bg-success'; // default: green
+
+      if (calloutVersion < currentVersion) {
+        badgeColor = 'bg-danger'; // outdated
+      } else if (calloutVersion > currentVersion) {
+        badgeColor = 'bg-warning'; // newer than current
+      }
+          if (callout.image) {
+  card.innerHTML += `
+    <img src="${callout.image}" class="card-img-top" alt="${callout.name}">
+  `;
+}
           const card = document.createElement('div');
           card.className = 'col-md-4 mb-3';
           card.innerHTML = `
-            <div class="card h-100">
+            <div class="card h-100 bg-light text-dark">
+            ${hasImage}
               <div class="card-body">
                 <h5 class="card-title">${callout.name}</h5>
+                <span class="badge rounded-pill ${badgeColor} mb-2">FivePD-JSON ${callout.fivepd_json_version}</span>
+            <span class="badge rounded-pill bg-primary mb-2">Callout v${callout.version}</span>
                 <p class="card-text">${callout.description}</p>
                 <a href="${callout.downloadURL}" class="btn btn-primary">Download</a>
               </div>
