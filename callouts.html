@@ -1,0 +1,10 @@
+const urlParams = new URLSearchParams(window.location.search);
+const calloutId = urlParams.get('id');
+
+fetch('callouts.json')
+  .then(res => res.json())
+  .then(data => {
+    const callout = data.callouts.find(c => c.id === calloutId);
+    // Render callout details, badges, images, etc.
+  });
+//more soon
