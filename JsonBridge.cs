@@ -135,7 +135,7 @@ namespace fivepd.json
                 }
             }
 
-            /*if (config.autoEnd && suspect != null)
+            if (config.autoEnd && suspect != null)
             {
                 suspectMonitorTickHandler = async () =>
                 {
@@ -148,10 +148,20 @@ namespace fivepd.json
                 };
 
                 Tick += suspectMonitorTickHandler;
-            }*/
+            }
         }
-
-
+        public override void OnBackupReceived(Player player)
+        {
+            // FOR LATER USE
+        }
+        public override void OnPlayerRevokedBackup(Player player)
+        {
+            // event logic
+        }
+        public override void OnBackupCalled(int code)
+        {
+            // event logic
+        }
         public override void OnCancelBefore()
         {
             base.OnCancelBefore();
@@ -180,6 +190,19 @@ namespace fivepd.json
         public override void OnCancelAfter()
         {
             // Might use this later for additional cleanup if needed
+        }
+        public override void OnPlayerRevokedBackup(Player player)
+        {
+            foreach (var s in spawnedSuspects)
+            {
+                if (s.Ped.Exists()) s.Ped.Delete();
+                if (s.Vehicle != null && s.Vehicle.Exists()) s.Vehicle.Delete();
+            }
+
+            foreach (var v in spawnedVictims)
+            {
+                if (v.Exists()) v.Delete();
+            }
         }
     }
 }
