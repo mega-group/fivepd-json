@@ -1,7 +1,11 @@
 {
   "comment": "FORK TO ADD YOUR OWN CALLOUTS HERE AND SUBMIT A PULL REQUEST -- MORE ADVANCED WEBSITE MAY BE INTRODUCED IN THE FUTURE",
+  "fivepd_json_version": "1.0",
   "callouts": [
     {
+      "uid": "burg-callout",
+      "version": "1.0",
+      "for_fivepd_json_version": "0.1",
       "name": "Burglary in Progress",
       "description": "Respond to reports of a burglary at a local residence.",
       "downloadURL": "https://mega-group.github.io/fivepd-json/"
