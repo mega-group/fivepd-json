@@ -52,7 +52,6 @@ namespace fivepd.json
             {
                 finalLocation = NearbyLocation.GetSafeRandomLocationFarAway();
             }
-            finalLocation = NearbyLocation.GetSafeRandomLocationFarAway();
             Location = finalLocation;
 
             ShortName = config.shortName;
@@ -111,6 +110,15 @@ namespace fivepd.json
             }
         }
 
+        private async Task SuspectMonitorTick()
+        {
+            await SuspectMonitor.MonitorAsync(
+                suspect,
+                () => isCalloutFinished,
+                () => isCalloutFinished = true,
+                EndCallout
+            );
+        }
 
         public override void OnStart(Ped closest)
         {
@@ -134,17 +142,7 @@ namespace fivepd.json
 
             if (config.autoEnd && suspect != null)
             {
-                suspectMonitorTickHandler = async () =>
-                {
-                    await SuspectMonitor.MonitorAsync(
-                        suspect,
-                        () => isCalloutFinished,
-                        () => isCalloutFinished = true,
-                        EndCallout
-                    );
-                };
-
-                Tick += suspectMonitorTickHandler;
+                Tick += SuspectMonitorTick;
             }
         }
         public override void OnBackupReceived(Player player)

@@ -48,11 +48,14 @@ namespace fivepd_json.Behavior
                             false,
                             firingPattern
                         );
+                        ped.Task.FleeFrom(playerPed);
                     }
                     else
                     {
                         ped.Task.ShootAt(playerPed, 10000);
                     }
+                    break;
+                case "random":
                     break;
 
                 default:
