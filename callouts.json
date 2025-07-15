@@ -1,1 +1,15 @@
-// SOON
+// FORK TO ADD YOUR OWN CALLOUTS HERE AND SUBMIT A PULL REQUEST -- MORE ADVANCED WEBSITE MAY BE INTRODUCED IN THE FUTURE
+{
+  "callouts": [
+    {
+      "name": "Burglary in Progress",
+      "description": "Respond to reports of a burglary at a local residence.",
+      "downloadURL": "https://mega-group.github.io/fivepd-json/"
+    },
+    {
+      "name": "Traffic Stop Backup",
+      "description": "Assist another officer during a routine traffic stop.",
+      "downloadURL": "https://mega-group.github.io/fivepd-json/"
+    }
+  ]
+}
