@@ -35,7 +35,7 @@ namespace fivepd.json
             ShortName = "json-dynamic";
             CalloutDescription = "Default dynamic scenario.";
             ResponseCode = 2;
-            StartDistance = 50f;
+            StartDistance = 200f;
 
             InitBlip(); // Show marker immediately
 
@@ -56,24 +56,43 @@ namespace fivepd.json
 
         public override async Task OnAccept()
         {
-            // These values will be shown in the callout UI
-            ShortName = $"{config.shortName}";
+            ShortName = config.shortName;
             ResponseCode = config.responseCode;
-            CalloutDescription = $"{config.description}";
-
+            CalloutDescription = config.description;
             UpdateData();
 
-            Debug.WriteLine($"[JsonBridge] Callout accepted with config: {config.shortName}");
+            // Determine spawnBase with ground height adjustment
+            Vector3 baseLoc;
 
+            if (config.location != null)
+                baseLoc = new Vector3(config.location.x, config.location.y, config.location.z);
+            else if (config.locations != null && config.locations.Count > 0)
+            {
+                var loc = config.locations[new Random().Next(config.locations.Count)];
+                baseLoc = new Vector3(loc.x, loc.y, loc.z);
+            }
+            else
+                baseLoc = NearbyLocation.GetSafeRandomLocationFarAway();
+
+            // Get ground height for Z
+            float groundZ = World.GetGroundHeight(baseLoc);
+            var spawnBase = new Vector3(baseLoc.X, baseLoc.Y, groundZ);
+
+            // Update circle on map to correct location
+            Location = spawnBase;
+            InitInfo(Location);
+            InitBlip();
+
+            // Spawn suspects near spawnBase
             if (config.suspects != null && config.suspects.Count > 0)
             {
-                spawnedSuspects = await SpawnSuspects.FromConfig(config.suspects, finalLocation);
+                spawnedSuspects = await SpawnSuspects.FromConfig(config.suspects, spawnBase);
                 if (spawnedSuspects.Count > 0)
                     suspect = spawnedSuspects[0].Ped;
             }
             else if (!string.IsNullOrEmpty(config.pedModel))
             {
-                var singleSuspect = await SpawnSuspects.SpawnSingleSuspect(config, finalLocation);
+                var singleSuspect = await SpawnSuspects.SpawnSingleSuspect(config, spawnBase);
                 if (singleSuspect != null)
                 {
                     spawnedSuspects.Add(singleSuspect);
@@ -81,12 +100,13 @@ namespace fivepd.json
                 }
             }
 
-
+            // Spawn victims near spawnBase as well
             if (config.victims?.Count > 0)
             {
-                spawnedVictims = await VictimSpawner.SpawnVictimsAsync(config.victims, finalLocation);
+                spawnedVictims = await VictimSpawner.SpawnVictimsAsync(config.victims, spawnBase);
             }
         }
+
 
         public override void OnStart(Ped closest)
         {
@@ -133,6 +153,7 @@ namespace fivepd.json
             foreach (var s in spawnedSuspects)
             {
                 if (s.Ped.Exists()) s.Ped.Delete();
+                if (s.Vehicle != null && s.Vehicle.Exists()) s.Vehicle.Delete();
             }
 
             foreach (var v in spawnedVictims)
@@ -151,7 +172,7 @@ namespace fivepd.json
 
         public override void OnCancelAfter()
         {
-            // Typically not needed unless you want to clean up later things
+            // Might use this later for additional cleanup if needed
         }
     }
 }
