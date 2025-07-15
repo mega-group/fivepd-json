@@ -39,6 +39,19 @@ namespace fivepd.json
                 vehicleModel = "SULTAN",
                 heading = 180f
             };
+            if (config.location != null)
+            {
+                finalLocation = new Vector3(config.location.x, config.location.y, config.location.z);
+            }
+            else if (config.locations != null && config.locations.Count > 0)
+            {
+                var loc = config.locations[new Random().Next(config.locations.Count)];
+                finalLocation = new Vector3(loc.x, loc.y, loc.z);
+            }
+            else
+            {
+                finalLocation = NearbyLocation.GetSafeRandomLocationFarAway();
+            }
             finalLocation = NearbyLocation.GetSafeRandomLocationFarAway();
             Location = finalLocation;
 
@@ -67,27 +80,11 @@ namespace fivepd.json
     $"\n  location: {(config.location != null ? $"({config.location.x}, {config.location.y}, {config.location.z})" : "null")}" +
     $"\n  locations: {(config.locations != null ? config.locations.Count.ToString() : "null")}"
 );
-            // Determine spawnBase with ground height adjustment
-            Vector3 baseLoc;
-
-            if (config.location != null)
-                baseLoc = new Vector3(config.location.x, config.location.y, config.location.z);
-            else if (config.locations != null && config.locations.Count > 0)
-            {
-                var loc = config.locations[new Random().Next(config.locations.Count)];
-                baseLoc = new Vector3(loc.x, loc.y, loc.z);
-            }
-            else
-                baseLoc = NearbyLocation.GetSafeRandomLocationFarAway();
 
             // Get ground height for Z
-            float groundZ = World.GetGroundHeight(baseLoc);
-            var spawnBase = new Vector3(baseLoc.X, baseLoc.Y, groundZ);
+            float groundZ = World.GetGroundHeight(finalLocation);
+            var spawnBase = new Vector3(finalLocation.X, finalLocation.Y, groundZ);
 
-            // Update circle on map to correct location
-            ShortName = config.shortName;
-            Location = spawnBase;
-            UpdateData();
             InitBlip();
 
             // Spawn suspects near spawnBase
