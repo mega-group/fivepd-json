@@ -28,17 +28,6 @@ namespace fivepd.json
 
         public JsonBridge()
         {
-            finalLocation = NearbyLocation.GetSafeRandomLocationFarAway();
-            Location = finalLocation;
-            InitInfo(Location);
-
-            ShortName = "json-dynamic";
-            CalloutDescription = "Default dynamic scenario.";
-            ResponseCode = 2;
-            StartDistance = 200f;
-
-            InitBlip(); // Show marker immediately
-
             config = JsonConfigManager.GetRandomConfig() ?? new CalloutConfig
             {
                 shortName = "json-dynamic",
@@ -50,17 +39,34 @@ namespace fivepd.json
                 vehicleModel = "SULTAN",
                 heading = 180f
             };
+            finalLocation = NearbyLocation.GetSafeRandomLocationFarAway();
+            Location = finalLocation;
+
+            ShortName = config.shortName;
+            CalloutDescription = config.description;
+            ResponseCode = config.responseCode;
+            StartDistance = 200f;
 
             Debug.WriteLine($"[JsonBridge] Selected config: {config.shortName}");
         }
 
         public override async Task OnAccept()
         {
-            ShortName = config.shortName;
-            ResponseCode = config.responseCode;
-            CalloutDescription = config.description;
-            UpdateData();
-
+            Debug.WriteLine($"[JsonBridge] Callout Accepted:" +
+    $"\n  shortName: {config.shortName}" +
+    $"\n  description: {config.description}" +
+    $"\n  responseCode: {config.responseCode}" +
+    $"\n  weapon: {config.weapon}" +
+    $"\n  pedModel: {config.pedModel}" +
+    $"\n  behavior: {config.behavior}" +
+    $"\n  vehicleModel: {config.vehicleModel}" +
+    $"\n  heading: {config.heading}" +
+    $"\n  autoEnd: {config.autoEnd}" +
+    $"\n  suspects: {(config.suspects != null ? config.suspects.Count.ToString() : "null")}" +
+    $"\n  victims: {(config.victims != null ? config.victims.Count.ToString() : "null")}" +
+    $"\n  location: {(config.location != null ? $"({config.location.x}, {config.location.y}, {config.location.z})" : "null")}" +
+    $"\n  locations: {(config.locations != null ? config.locations.Count.ToString() : "null")}"
+);
             // Determine spawnBase with ground height adjustment
             Vector3 baseLoc;
 
@@ -79,8 +85,9 @@ namespace fivepd.json
             var spawnBase = new Vector3(baseLoc.X, baseLoc.Y, groundZ);
 
             // Update circle on map to correct location
+            ShortName = config.shortName;
             Location = spawnBase;
-            InitInfo(Location);
+            UpdateData();
             InitBlip();
 
             // Spawn suspects near spawnBase
@@ -128,7 +135,7 @@ namespace fivepd.json
                 }
             }
 
-            if (config.autoEnd && suspect != null)
+            /*if (config.autoEnd && suspect != null)
             {
                 suspectMonitorTickHandler = async () =>
                 {
@@ -141,7 +148,7 @@ namespace fivepd.json
                 };
 
                 Tick += suspectMonitorTickHandler;
-            }
+            }*/
         }
 
 
