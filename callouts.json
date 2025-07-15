@@ -13,9 +13,14 @@
       "searchTerms": ["burglary", "theft", "house", "property", "intruder"]
     },
     {
+      "uid": "traffic-backup",
+      "version": "1.0",
+      "for_fivepd_json_version": "1.0",
       "name": "Traffic Stop Backup",
       "description": "Assist another officer during a routine traffic stop.",
-      "downloadURL": "https://mega-group.github.io/fivepd-json/"
+      "downloadURL": "https://mega-group.github.io/fivepd-json/",
+      "image": "",
+      "searchTerms": ["traffic", "backup", "stop", "officer", "assist"]
     }
   ]
 }
