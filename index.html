@@ -16,59 +16,68 @@
   </div>
 
   <script>
-    fetch('callouts.json')
-      .then(response => response.json())
-      .then(data => {
-        const container = document.getElementById('calloutList');
-        const currentVersion = parseFloat(data.fivepd_json_version);
-        
-        data.callouts.forEach(callout => {
-          document.getElementById('searchInput').addEventListener('input', function () {
-  const keyword = this.value.toLowerCase();
+  fetch('callouts.json')
+    .then(response => response.json())
+    .then(data => {
+      const container = document.getElementById('calloutList');
+      const currentVersion = parseFloat(data.fivepd_json_version);
 
-  document.querySelectorAll('.card').forEach(card => {
-    const name = card.querySelector('.card-title').textContent.toLowerCase();
-    const description = card.querySelector('.card-text').textContent.toLowerCase();
-    const terms = card.getAttribute('data-search') ?? "";
+      data.callouts.forEach(callout => {
+        const cardWrapper = document.createElement('div');
+        cardWrapper.className = 'col-md-4 mb-3';
 
-    const match = name.includes(keyword) || description.includes(keyword) || terms.includes(keyword);
-    card.parentElement.style.display = match ? '' : 'none';
-  });
-});
-      const calloutVersion = parseFloat(callout.for_fivepd_json_version ?? '1.0');
-      let badgeColor = 'bg-success'; // default: green
+        const card = document.createElement('div');
+        card.className = 'card h-100 bg-light text-dark';
 
-      if (calloutVersion < currentVersion) {
-        badgeColor = 'bg-danger'; // outdated
-      } else if (calloutVersion > currentVersion) {
-        badgeColor = 'bg-warning'; // newer than current
-      }
-          if (callout.image) {
-  card.innerHTML += `
-    <img src="${callout.image}" class="card-img-top" alt="${callout.name}">
-  `;
-}
-          const searchTags = (callout.searchTerms ?? []).join(" ").toLowerCase();
+        const calloutVersion = parseFloat(callout.for_fivepd_json_version ?? '1.0');
+        let badgeColor = 'bg-success';
 
-card.setAttribute('data-search', searchTags);
-          const card = document.createElement('div');
-          card.className = 'col-md-4 mb-3';
-          card.innerHTML = `
-            <div class="card h-100 bg-light text-dark">
-            ${hasImage}
-              <div class="card-body">
-                <h5 class="card-title">${callout.name}</h5>
-                <span class="badge rounded-pill ${badgeColor} mb-2">FivePD-JSON ${callout.fivepd_json_version}</span>
-            <span class="badge rounded-pill bg-primary mb-2">Callout v${callout.version}</span>
-                <p class="card-text">${callout.description}</p>
-                <a href="${callout.downloadURL}" class="btn btn-primary">Download</a>
-              </div>
-            </div>`;
-          container.appendChild(card);
+        if (calloutVersion < currentVersion) {
+          badgeColor = 'bg-danger';
+        } else if (calloutVersion > currentVersion) {
+          badgeColor = 'bg-warning';
+        }
+
+        const hasImage = callout.image?.trim();
+        const imageHTML = hasImage ? `
+          <img src="${callout.image}" class="card-img-top" alt="${callout.name}">
+        ` : '';
+
+        const searchTags = [
+          callout.name,
+          callout.description,
+          ...(callout.searchTerms ?? [])
+        ].join(' ').toLowerCase();
+
+        card.setAttribute('data-search', searchTags);
+
+        card.innerHTML = `
+          ${imageHTML}
+          <div class="card-body">
+            <h5 class="card-title">${callout.name}</h5>
+            ${callout.for_fivepd_json_version ? `<span class="badge rounded-pill ${badgeColor} mb-2">FivePD-JSON ${callout.for_fivepd_json_version}</span>` : ''}
+            ${callout.version ? `<span class="badge rounded-pill bg-primary mb-2">Callout v${callout.version}</span>` : ''}
+            <p class="card-text">${callout.description}</p>
+            <a href="${callout.downloadURL}" class="btn btn-primary">Download</a>
+          </div>
+        `;
+
+        cardWrapper.appendChild(card);
+        container.appendChild(cardWrapper);
+      });
+
+      document.getElementById('searchInput').addEventListener('input', function () {
+        const keyword = this.value.toLowerCase();
+        document.querySelectorAll('.card').forEach(card => {
+          const terms = card.getAttribute('data-search') ?? "";
+          const match = terms.includes(keyword);
+          card.parentElement.style.display = match ? '' : 'none';
         });
-      })
-      .catch(error => console.error('Error loading JSON:', error));
-  </script>
+      });
+    })
+    .catch(error => console.error('Error loading JSON:', error));
+</script>
+
 
   </body>
 </html>
