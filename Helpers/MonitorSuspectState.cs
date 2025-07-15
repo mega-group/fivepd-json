@@ -16,9 +16,11 @@ namespace fivepd_json.Helpers
                 markFinished?.Invoke();
                 Debug.WriteLine("[JsonBridge] Auto-ending callout due to suspect state.");
                 endCallout?.Invoke();
+                return;
             }
 
-            await Task.CompletedTask;
+            await Task.FromResult(0);
+
         }
     }
 }

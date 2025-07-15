@@ -18,13 +18,10 @@ namespace fivepd.json
     {
         private CalloutConfig config;
         private Vector3 finalLocation;
-        private Ped suspect;
         private bool isCalloutFinished = false;
 
         private List<SpawnedSuspect> spawnedSuspects = new List<SpawnedSuspect>();
         private List<Ped> spawnedVictims = new List<Ped>();
-
-        private Func<Task> suspectMonitorTickHandler;
 
         public JsonBridge()
         {
@@ -37,8 +34,10 @@ namespace fivepd.json
                 weapon = "WEAPON_PISTOL",
                 behavior = "fight",
                 vehicleModel = "SULTAN",
-                heading = 180f
+                heading = 180f,
+                pursuit = true
             };
+
             if (config.location != null)
             {
                 finalLocation = new Vector3(config.location.x, config.location.y, config.location.z);
@@ -64,136 +63,148 @@ namespace fivepd.json
 
         public override async Task OnAccept()
         {
-            Debug.WriteLine($"[JsonBridge] Callout Accepted:" +
-    $"\n  shortName: {config.shortName}" +
-    $"\n  description: {config.description}" +
-    $"\n  responseCode: {config.responseCode}" +
-    $"\n  weapon: {config.weapon}" +
-    $"\n  pedModel: {config.pedModel}" +
-    $"\n  behavior: {config.behavior}" +
-    $"\n  vehicleModel: {config.vehicleModel}" +
-    $"\n  heading: {config.heading}" +
-    $"\n  autoEnd: {config.autoEnd}" +
-    $"\n  suspects: {(config.suspects != null ? config.suspects.Count.ToString() : "null")}" +
-    $"\n  victims: {(config.victims != null ? config.victims.Count.ToString() : "null")}" +
-    $"\n  location: {(config.location != null ? $"({config.location.x}, {config.location.y}, {config.location.z})" : "null")}" +
-    $"\n  locations: {(config.locations != null ? config.locations.Count.ToString() : "null")}"
-);
+            spawnedSuspects.Clear();
+            spawnedVictims.Clear();
 
-            // Get ground height for Z
+            Debug.WriteLine("[JsonBridge] Callout Accepted:" +
+                $"\n  shortName: {config.shortName}" +
+                $"\n  description: {config.description}" +
+                $"\n  responseCode: {config.responseCode}" +
+                $"\n  weapon: {config.weapon}" +
+                $"\n  pedModel: {config.pedModel}" +
+                $"\n  behavior: {config.behavior}" +
+                $"\n  vehicleModel: {config.vehicleModel}" +
+                $"\n  heading: {config.heading}" +
+                $"\n  autoEnd: {config.autoEnd}" +
+                $"\n  pursuit: {config.pursuit}" +
+                $"\n  suspects: {(config.suspects?.Count.ToString() ?? "null")}" +
+                $"\n  victims: {(config.victims?.Count.ToString() ?? "null")}" +
+                $"\n  location: {(config.location != null ? $"({config.location.x}, {config.location.y}, {config.location.z})" : "null")}" +
+                $"\n  locations: {(config.locations?.Count.ToString() ?? "null")}"
+            );
+
             float groundZ = World.GetGroundHeight(finalLocation);
             var spawnBase = new Vector3(finalLocation.X, finalLocation.Y, groundZ);
 
             InitBlip();
 
-            // Spawn suspects near spawnBase
-            if (config.suspects != null && config.suspects.Count > 0)
+            try
             {
-                spawnedSuspects = await SpawnSuspects.FromConfig(config.suspects, spawnBase);
-                if (spawnedSuspects.Count > 0)
-                    suspect = spawnedSuspects[0].Ped;
-            }
-            else if (!string.IsNullOrEmpty(config.pedModel))
-            {
-                var singleSuspect = await SpawnSuspects.SpawnSingleSuspect(config, spawnBase);
-                if (singleSuspect != null)
+                if (config.suspects != null && config.suspects.Count > 0)
                 {
-                    spawnedSuspects.Add(singleSuspect);
-                    suspect = singleSuspect.Ped;
+                    spawnedSuspects = await SpawnSuspects.FromConfig(config.suspects, spawnBase);
+                }
+                else if (!string.IsNullOrEmpty(config.pedModel))
+                {
+                    var singleSuspect = await SpawnSuspects.SpawnSingleSuspect(config, spawnBase);
+                    if (singleSuspect != null)
+                        spawnedSuspects.Add(singleSuspect);
+                }
+
+                if (spawnedSuspects.Count == 0)
+                {
+                    Debug.WriteLine("[JsonBridge] ❌ No suspects spawned!");
+                    return;
+                }
+
+                if (config.victims != null && config.victims.Count > 0)
+                {
+                    spawnedVictims = await VictimSpawner.SpawnVictimsAsync(config.victims, spawnBase);
                 }
             }
-
-            // Spawn victims near spawnBase as well
-            if (config.victims?.Count > 0)
+            catch (Exception ex)
             {
-                spawnedVictims = await VictimSpawner.SpawnVictimsAsync(config.victims, spawnBase);
+                Debug.WriteLine($"[JsonBridge] Exception during OnAccept spawn: {ex}");
             }
         }
 
-        private async Task SuspectMonitorTick()
+        public override async void OnStart(Ped player)
         {
-            await SuspectMonitor.MonitorAsync(
-                suspect,
-                () => isCalloutFinished,
-                () => isCalloutFinished = true,
-                EndCallout
-            );
-        }
-
-        public override void OnStart(Ped closest)
-        {
-            base.OnStart(closest);
-
-            if (closest.NetworkId != Game.PlayerPed.NetworkId)
-            {
-                this.AssignedPlayers.Add(closest);
-            }
-
+            base.OnStart(player);
             Debug.WriteLine("[JsonBridge] Player has arrived on scene.");
 
-            // Activate behavior now that player is on scene
-            foreach (var s in spawnedSuspects)
+            if (spawnedSuspects == null || spawnedSuspects.Count == 0)
             {
-                if (!string.IsNullOrEmpty(s.Behavior))
-                {
-                    SuspectBehavior.HandleBehavior(s.Ped, s.Behavior);
-                }
+                Debug.WriteLine("[JsonBridge] ❌ No suspects to process.");
+                return;
             }
 
-            if (config.autoEnd && suspect != null)
+            foreach (var s in spawnedSuspects)
             {
-                Tick += SuspectMonitorTick;
+                try
+                {
+                    if (s?.Ped != null && s.Ped.Exists() && !string.IsNullOrEmpty(s.Behavior))
+                    {
+                        SuspectBehavior.HandleBehavior(s.Ped, s.Behavior);
+                        Debug.WriteLine($"[JsonBridge] Ped {s.Ped.Handle} spawned with behavior: {s.Behavior}");
+
+                        if (config.pursuit)
+                        {
+                            var pursuit = Pursuit.RegisterPursuit(s.Ped);
+                            Debug.WriteLine($"[JsonBridge] 🚓 Registered pursuit for ped {s.Ped.Handle}");
+                            await BaseScript.Delay(100); // small delay between pursuits
+                        }
+                    }
+                    else
+                    {
+                        Debug.WriteLine("[JsonBridge] Skipping suspect behavior — invalid Ped or behavior.");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"[JsonBridge] Exception in OnStart suspect handling: {ex}");
+                }
             }
         }
-        public override void OnBackupReceived(Player player)
-        {
-            // FOR LATER USE
-        }
-        public override void OnBackupCalled(int code)
-        {
-            // event logic
-        }
+
         public override void OnCancelBefore()
         {
             base.OnCancelBefore();
             Debug.WriteLine("[JsonBridge] Cleaning up all entities.");
 
-            foreach (var s in spawnedSuspects)
+            try
             {
-                if (s.Ped.Exists()) s.Ped.Delete();
-                if (s.Vehicle != null && s.Vehicle.Exists()) s.Vehicle.Delete();
+                foreach (var s in spawnedSuspects)
+                {
+                    if (s?.Ped != null && s.Ped.Exists())
+                        s.Ped.Delete();
+                    if (s?.Vehicle != null && s.Vehicle.Exists())
+                        s.Vehicle.Delete();
+                }
+
+                foreach (var v in spawnedVictims)
+                {
+                    if (v != null && v.Exists())
+                        v.Delete();
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[JsonBridge] Exception during cleanup: {ex}");
             }
 
-            foreach (var v in spawnedVictims)
-            {
-                if (v.Exists()) v.Delete();
-            }
-
-            if (suspectMonitorTickHandler != null)
-            {
-                Tick -= suspectMonitorTickHandler;
-                suspectMonitorTickHandler = null;
-            }
-
+            isCalloutFinished = true;
             Debug.WriteLine("[JsonBridge] Entity cleanup complete.");
         }
 
         public override void OnCancelAfter()
         {
-            // Might use this later for additional cleanup if needed
+            // additional cleanup if needed
         }
+
+        public override void OnBackupReceived(Player player)
+        {
+            // optional backup logic
+        }
+
+        public override void OnBackupCalled(int code)
+        {
+            // optional backup called logic
+        }
+
         public override void OnPlayerRevokedBackup(Player player)
         {
-            foreach (var s in spawnedSuspects)
-            {
-                if (s.Ped.Exists()) s.Ped.Delete();
-                if (s.Vehicle != null && s.Vehicle.Exists()) s.Vehicle.Delete();
-            }
-
-            foreach (var v in spawnedVictims)
-            {
-                if (v.Exists()) v.Delete();
-            }
+            OnCancelBefore(); // cleanup when backup revoked
         }
     }
 }

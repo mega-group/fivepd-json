@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using CitizenFX.Core;
 using CitizenFX.Core.Native;
+using FivePD.API;
 
 namespace fivepd_json.Behavior
 {
@@ -12,7 +13,34 @@ namespace fivepd_json.Behavior
     {
         public static void HandleBehavior(Ped ped, string behavior, Ped target = null)
         {
-            var playerPed = target ?? Game.PlayerPed;
+            if (ped == null || !ped.Exists())
+            {
+                Debug.WriteLine("[SuspectBehavior] ❌ Suspect ped is null or doesn't exist.");
+                return;
+            }
+
+            Ped playerPed = target;
+
+            if (playerPed == null || !playerPed.Exists())
+            {
+                try
+                {
+                    playerPed = Game.PlayerPed;
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"[SuspectBehavior] ❌ Failed to access Game.PlayerPed: {ex.Message}");
+                    return;
+                }
+            }
+
+            if (playerPed == null || !playerPed.Exists())
+            {
+                Debug.WriteLine("[SuspectBehavior] ❌ playerPed is still null or does not exist.");
+                return;
+            }
+
+            Debug.WriteLine($"[JsonBridge] Handling behavior '{behavior}' for ped {ped.Handle} (target: {playerPed.Handle})");
 
             switch ((behavior ?? "").ToLower())
             {
@@ -24,43 +52,29 @@ namespace fivepd_json.Behavior
                     ped.Task.FleeFrom(playerPed);
                     break;
 
-                case "driveby":
-                    API.SetPedAsEnemy(ped.Handle, true);
+                case "flee&shoot":
                     API.GiveWeaponToPed(ped.Handle, (uint)API.GetHashKey("WEAPON_PISTOL"), 100, false, true);
+                    ped.Task.FleeFrom(playerPed);
 
                     if (ped.IsInVehicle())
                     {
-                        int vehicle = API.GetVehiclePedIsIn(ped.Handle, false);
-                        if (API.GetPedInVehicleSeat(vehicle, -1) != ped.Handle)
-                        {
-                            API.TaskWarpPedIntoVehicle(ped.Handle, vehicle, -1); // Driver seat
-                        }
-
-                        uint firingPattern = (uint)API.GetHashKey("FIRING_PATTERN_BURST_FIRE_DRIVEBY");
-
-                        API.TaskDriveBy(
-                            ped.Handle,
-                            playerPed.Handle,
-                            0,
-                            0f, 0f, 0f,
-                            15f,
-                            100,
-                            false,
-                            firingPattern
-                        );
-                        ped.Task.FleeFrom(playerPed);
+                        API.TaskVehicleShootAtPed(ped.Handle, playerPed.Handle, 3.0f);
                     }
                     else
                     {
-                        ped.Task.ShootAt(playerPed, 10000);
+                        ped.Task.ShootAt(playerPed);
                     }
                     break;
+
                 case "random":
+                    Debug.WriteLine("[SuspectBehavior] Behavior 'random' is not implemented.");
                     break;
 
                 default:
+                    Debug.WriteLine($"[SuspectBehavior] ⚠️ Unknown behavior: {behavior}");
                     break;
             }
         }
+
     }
 }

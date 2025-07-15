@@ -64,6 +64,8 @@ namespace fivepd_json.Logic
             if (!pedModel.IsLoaded) return null;
 
             var ped = await World.CreatePed(pedModel, position);
+            if (ped == null) return null;
+
             ped.BlockPermanentEvents = true;
             ped.AlwaysKeepTask = true;
             ped.AttachBlip();
