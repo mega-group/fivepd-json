@@ -11,6 +11,7 @@
   <body class="bg-dark text-white">
     <div class="container mt-5">
     <h1 class="mb-4">FivePD JSON Callouts</h1>
+    <input type="text" id="searchInput" class="form-control mb-4" placeholder="Search callouts...">
     <div id="calloutList" class="row"></div>
   </div>
 
@@ -22,6 +23,18 @@
         const currentVersion = parseFloat(data.fivepd_json_version);
         
         data.callouts.forEach(callout => {
+          document.getElementById('searchInput').addEventListener('input', function () {
+  const keyword = this.value.toLowerCase();
+
+  document.querySelectorAll('.card').forEach(card => {
+    const name = card.querySelector('.card-title').textContent.toLowerCase();
+    const description = card.querySelector('.card-text').textContent.toLowerCase();
+    const terms = card.getAttribute('data-search') ?? "";
+
+    const match = name.includes(keyword) || description.includes(keyword) || terms.includes(keyword);
+    card.parentElement.style.display = match ? '' : 'none';
+  });
+});
           let badgeColor = 'bg-success'; // default: green
 
       const calloutVersion = parseFloat(callout.for_fivepd_json_version ?? '1.0');
@@ -37,6 +50,9 @@
     <img src="${callout.image}" class="card-img-top" alt="${callout.name}">
   `;
 }
+          const searchTags = (callout.searchTerms ?? []).join(" ").toLowerCase();
+
+card.setAttribute('data-search', searchTags);
           const card = document.createElement('div');
           card.className = 'col-md-4 mb-3';
           card.innerHTML = `
