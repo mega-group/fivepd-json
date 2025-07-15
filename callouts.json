@@ -8,7 +8,7 @@
       "for_fivepd_json_version": "0.1",
       "name": "Burglary in Progress",
       "description": "Respond to reports of a burglary at a local residence.",
-      "downloadURL": "https://mega-group.github.io/fivepd-json/"
+      "downloadURL": "https://mega-group.github.io/fivepd-json/",
       "image": "",
       "searchTerms": ["burglary", "theft", "house", "property", "intruder"]
     },
