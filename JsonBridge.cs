@@ -121,30 +121,49 @@ namespace fivepd.json
         }
 
         public override void OnStart(Ped closest)
+{
+    base.OnStart(closest);
+
+    // Prevent FivePD internal crash
+    if (!AssignedPlayers.Contains(Game.Player))
+    {
+        AssignedPlayers.Add(Game.Player);
+    }
+
+    Debug.WriteLine("[JsonBridge] OnStart triggered.");
+
+    if (!suspectsInitialized)
+    {
+        Debug.WriteLine("[JsonBridge] suspects not initialized, skipping OnStart logic.");
+        return;
+    }
+
+    foreach (var s in spawnedSuspects)
+    {
+        if (s?.Ped != null && s.Ped.Exists())
         {
-            base.OnStart(closest);
-
-            if (closest.NetworkId != Game.PlayerPed.NetworkId)
+            try
             {
-                this.AssignedPlayers.Add(closest);
+                Debug.WriteLine($"[JsonBridge] Applying behavior {s.Behavior}");
+                SuspectBehavior.HandleBehavior(s.Ped, s.Behavior);
             }
-
-            Debug.WriteLine("[JsonBridge] Player has arrived on scene.");
-
-            // Activate behavior now that player is on scene
-            foreach (var s in spawnedSuspects)
+            catch (Exception ex)
             {
-                if (!string.IsNullOrEmpty(s.Behavior))
-                {
-                    SuspectBehavior.HandleBehavior(s.Ped, s.Behavior);
-                }
-            }
-
-            if (config.autoEnd && suspect != null)
-            {
-                Tick += SuspectMonitorTick;
+                Debug.WriteLine($"[JsonBridge] Error in HandleBehavior: {ex}");
             }
         }
+        else
+        {
+            Debug.WriteLine("[JsonBridge] Suspect Ped is null or does not exist.");
+        }
+    }
+
+    if (config.autoEnd && suspect != null)
+    {
+        suspectMonitorTickHandler = SuspectMonitorTick;
+        Tick += suspectMonitorTickHandler;
+    }
+}
         public override void OnBackupReceived(Player player)
         {
             // FOR LATER USE
