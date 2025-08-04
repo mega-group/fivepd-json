@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using CitizenFX.Core;
 using FivePD.API;
+using FivePD.API.Utils;
 using fivepd_json.Behavior;
 using fivepd_json.Helpers;
 using fivepd_json.Loader;
@@ -22,6 +24,8 @@ namespace fivepd.json
 
         private List<SpawnedSuspect> spawnedSuspects = new List<SpawnedSuspect>();
         private List<Ped> spawnedVictims = new List<Ped>();
+        private bool suspectsInitialized = false;
+        private Func<Task> suspectMonitorTickHandler;
 
         public JsonBridge()
         {
@@ -107,6 +111,11 @@ namespace fivepd.json
                     return;
                 }
 
+                if (spawnedSuspects.Count > 0)
+                {
+                    suspectsInitialized = true;
+                }
+
                 if (config.victims != null && config.victims.Count > 0)
                 {
                     spawnedVictims = await VictimSpawner.SpawnVictimsAsync(config.victims, spawnBase);
@@ -118,42 +127,62 @@ namespace fivepd.json
             }
         }
 
-        public override async void OnStart(Ped player)
+        private async Task SuspectMonitorTick()
         {
-            base.OnStart(player);
-            Debug.WriteLine("[JsonBridge] Player has arrived on scene.");
-
-            if (spawnedSuspects == null || spawnedSuspects.Count == 0)
+            foreach (var suspect in spawnedSuspects)
             {
-                Debug.WriteLine("[JsonBridge] ❌ No suspects to process.");
+                if (suspect?.Ped != null && suspect.Ped.Exists())
+                {
+                    await SuspectMonitor.MonitorAsync(
+                        suspect.Ped,
+                        () => isCalloutFinished,
+                        () => isCalloutFinished = true,
+                        EndCallout
+                    );
+                }
+            }
+        }
+        public override void OnStart(Ped closest)
+        {
+            base.OnStart(closest);
+
+            if (!AssignedPlayers.Contains(Game.PlayerPed))
+            {
+                AssignedPlayers.Add(Game.PlayerPed);
+            }
+
+            Debug.WriteLine("[JsonBridge] OnStart triggered.");
+
+            if (!suspectsInitialized)
+            {
+                Debug.WriteLine("[JsonBridge] suspects not initialized, skipping OnStart logic.");
                 return;
             }
 
             foreach (var s in spawnedSuspects)
             {
-                try
+                if (s?.Ped != null && s.Ped.Exists())
                 {
-                    if (s?.Ped != null && s.Ped.Exists() && !string.IsNullOrEmpty(s.Behavior))
+                    try
                     {
+                        Debug.WriteLine($"[JsonBridge] Applying behavior {s.Behavior}");
                         SuspectBehavior.HandleBehavior(s.Ped, s.Behavior);
-                        Debug.WriteLine($"[JsonBridge] Ped {s.Ped.Handle} spawned with behavior: {s.Behavior}");
-
-                        if (config.pursuit)
-                        {
-                            var pursuit = Pursuit.RegisterPursuit(s.Ped);
-                            Debug.WriteLine($"[JsonBridge] 🚓 Registered pursuit for ped {s.Ped.Handle}");
-                            await BaseScript.Delay(100); // small delay between pursuits
-                        }
                     }
-                    else
+                    catch (Exception ex)
                     {
-                        Debug.WriteLine("[JsonBridge] Skipping suspect behavior — invalid Ped or behavior.");
+                        Debug.WriteLine($"[JsonBridge] Error in HandleBehavior: {ex}");
                     }
                 }
-                catch (Exception ex)
+                else
                 {
-                    Debug.WriteLine($"[JsonBridge] Exception in OnStart suspect handling: {ex}");
+                    Debug.WriteLine("[JsonBridge] Suspect Ped is null or does not exist.");
                 }
+            }
+
+            if (config.autoEnd && spawnedSuspects != null)
+            {
+                suspectMonitorTickHandler = SuspectMonitorTick;
+                Tick += suspectMonitorTickHandler;
             }
         }
 
@@ -184,6 +213,7 @@ namespace fivepd.json
             }
 
             isCalloutFinished = true;
+            Tick -= suspectMonitorTickHandler;
             Debug.WriteLine("[JsonBridge] Entity cleanup complete.");
         }
 
