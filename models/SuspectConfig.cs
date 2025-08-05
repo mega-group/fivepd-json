@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using fivepd_json.net.models;
 
 namespace fivepd_json.models
 {
@@ -17,5 +18,8 @@ namespace fivepd_json.models
         public int? seatIndex { get; set; }
         public bool? excludeFromTrafficStop { get; set; }
         public List<PedQuestionConfig> questions { get; set; }
+        public VehicleDataConfig vehicleData { get; set; }
+        public PedDataConfig PedData { get; set; }
+
     }
 }

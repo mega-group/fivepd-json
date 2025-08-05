@@ -7,6 +7,7 @@ using FivePD.API;
 using FivePD.API.Utils;
 using fivepd_json.Helpers;
 using fivepd_json.models;
+using fivepd_json.net.models;
 
 namespace fivepd_json.Logic
 {
@@ -17,9 +18,10 @@ namespace fivepd_json.Logic
             public Ped Ped { get; set; }
             public string Behavior { get; set; }
             public Vehicle Vehicle { get; set; }
-
             public string Weapon { get; set; }
             public List<PedQuestionConfig> Questions { get; set; }
+            public List<PedDataConfig> PedData { get; set; }
+            public List<VehicleDataConfig> VehicleData { get; set; }
         }
 
         public static async Task<List<SpawnedSuspect>> FromConfig(List<SuspectConfig> configs, Vector3 spawnCenter)
@@ -144,7 +146,9 @@ namespace fivepd_json.Logic
                 Ped = ped,
                 Behavior = cfg.behavior,
                 Vehicle = vehicle,
-                Questions = cfg.questions
+                Questions = cfg.questions,
+                PedData = cfg.PedData != null ? new List<PedDataConfig> { cfg.PedData } : null,
+                VehicleData = cfg.vehicleData != null ? new List<VehicleDataConfig> { cfg.vehicleData } : null
             };
         }
 

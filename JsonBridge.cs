@@ -10,6 +10,7 @@ using fivepd_json.Helpers;
 using fivepd_json.Loader;
 using fivepd_json.Logic;
 using fivepd_json.models;
+using fivepd_json.net.models;
 using static CitizenFX.Core.Native.API;
 using static fivepd_json.Logic.SpawnSuspects;
 
@@ -131,6 +132,101 @@ namespace fivepd.json
 
                 foreach (var suspect in spawnedSuspects)
                 {
+                    if (suspect.PedData?.Count > 0)
+                    {
+                        var defaultPedData = await FivePD.API.Utilities.GetPedData(suspect.Ped.NetworkId);
+                        var cfg = suspect.PedData[0];
+                        var pedData = await suspect.Ped.GetData();
+
+                        pedData.FirstName = !string.IsNullOrWhiteSpace(cfg.firstName)
+    ? cfg.firstName
+    : defaultPedData.FirstName;
+
+                        pedData.LastName = !string.IsNullOrWhiteSpace(cfg.lastName)
+                            ? cfg.lastName
+                            : defaultPedData.LastName;
+
+                        pedData.DateOfBirth = !string.IsNullOrWhiteSpace(cfg.dateOfBirth)
+                            ? cfg.dateOfBirth
+                            : defaultPedData.DateOfBirth;
+
+                        pedData.Address = !string.IsNullOrWhiteSpace(cfg.address)
+                            ? cfg.address
+                            : defaultPedData.Address;
+
+                        pedData.Warrant = !string.IsNullOrWhiteSpace(cfg.warrant)
+                            ? cfg.warrant
+                            : defaultPedData.Warrant;
+
+                        pedData.BloodAlcoholLevel = cfg.bloodAlcoholLevel ?? defaultPedData.BloodAlcoholLevel;
+
+                        pedData.Age = cfg.age ?? defaultPedData.Age;
+
+                        if (!string.IsNullOrWhiteSpace(cfg.gender) &&
+                            Enum.TryParse(cfg.gender, true, out Gender parsedGender))
+                        {
+                            pedData.Gender = parsedGender;
+                        }
+                        else
+                        {
+                            pedData.Gender = defaultPedData.Gender;
+                        }
+
+                        pedData.UsedDrugs = cfg.usedDrugs?.Length == 3
+                            ? cfg.usedDrugs.Select((used, index) => used ? (PedData.Drugs)index : (PedData.Drugs?)null)
+                                           .Where(drug => drug.HasValue)
+                                           .Select(drug => drug.Value)
+                                           .ToArray()
+                            : defaultPedData.UsedDrugs ?? Array.Empty<PedData.Drugs>();
+
+                        pedData.DriverLicense = cfg.driverLicense != null
+                            ? CreateLicense(cfg.driverLicense)
+                            : defaultPedData.DriverLicense;
+
+                        pedData.WeaponLicense = cfg.weaponLicense != null
+                            ? CreateLicense(cfg.weaponLicense)
+                            : defaultPedData.WeaponLicense;
+
+                        pedData.HuntingLicense = cfg.huntingLicense != null
+                            ? CreateLicense(cfg.huntingLicense)
+                            : defaultPedData.HuntingLicense;
+
+                        pedData.FishingLicense = cfg.fishingLicense != null
+                            ? CreateLicense(cfg.fishingLicense)
+                            : defaultPedData.FishingLicense;
+
+
+                        if (cfg.items != null)
+                        {
+                            foreach (var item in cfg.items)
+                                pedData.Items.Add(new Item { Name = item.Name, IsIllegal = item.IsIllegal });
+                        }
+
+                        if (cfg.violations != null)
+                        {
+                            foreach (var v in cfg.violations)
+                                pedData.Violations.Add(new Violation { Offence = v.Offence, Charge = v.Charge });
+                        }
+
+                        suspect.Ped.SetData(pedData);
+                        DebugHelper.Log($"[JsonBridge] Applied PedData to {suspect.Ped.Handle}", "INFO");
+                    }
+
+                    if (suspect.Vehicle != null && suspect.VehicleData?.Count > 0)
+                    {
+                        var cfg = suspect.VehicleData[0];
+                        var vehData = await suspect.Vehicle.GetData();
+
+                        if (cfg.items != null)
+                        {
+                            foreach (var item in cfg.items)
+                                vehData.Items.Add(new Item { Name = item.Name, IsIllegal = item.IsIllegal });
+                        }
+
+                        suspect.Vehicle.SetData(vehData);
+                        DebugHelper.Log($"[JsonBridge] Applied VehicleData to vehicle {suspect.Vehicle.Handle}", "INFO");
+                    }
+
                     if (suspect.Questions != null && suspect.Questions.Count > 0)
                     {
                         var pedQuestions = new List<PedQuestion>();
@@ -148,17 +244,20 @@ namespace fivepd.json
                         }
 
                         if (pedQuestions.Count == 1)
-                        {
                             AddPedQuestion(suspect.Ped, pedQuestions[0]);
-                        }
                         else if (pedQuestions.Count > 1)
-                        {
                             AddPedQuestions(suspect.Ped, pedQuestions.ToArray());
+
+                        foreach (var question in pedQuestions)
+                        {
+                            int answerCount = question.Answers?.Count ?? 0;
+                            DebugHelper.Log($"Question: \"{question.Question}\" has {answerCount} answer(s)", "INFO");
                         }
 
                         DebugHelper.Log($"[JsonBridge] Added {pedQuestions.Count} question(s) to ped {suspect.Ped.Handle}", "INFO");
                     }
                 }
+
 
             }
             catch (Exception ex)
@@ -166,6 +265,20 @@ namespace fivepd.json
                 DebugHelper.Log($"[JsonBridge] Exception during OnAccept: {ex}", "ERROR");
             }
         }
+
+        private PedData.License CreateLicense(LicenseConfig cfg)
+        {
+            if (cfg == null) return null;
+
+            return new PedData.License
+            {
+                ExpirationDate = cfg.expiration,
+                LicenseStatus = Enum.TryParse(cfg.licenseStatus, out PedData.License.Status status)
+                    ? status : PedData.License.Status.Valid
+            };
+        }
+
+
 
         private async Task SuspectMonitorTick()
         {
