@@ -5,12 +5,12 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("fivepd-json_2")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyTitle("fivepd-json")]
+[assembly: AssemblyDescription("This is the callout for fivepd-json create your own callouts using only json files!")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("fivepd-json_2")]
-[assembly: AssemblyCopyright("Copyright ©  2025")]
+[assembly: AssemblyCompany("Mega Utilities Company")]
+[assembly: AssemblyProduct("fivepd-json")]
+[assembly: AssemblyCopyright("Copyright © Mega Utilities' Mega Group 2025")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
