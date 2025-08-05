@@ -68,7 +68,7 @@ namespace fivepd.json
             ResponseCode = config.responseCode;
             StartDistance = (config.startDistance > 5) ? config.startDistance : 250f;
 
-            DebugHelper.Log($"[JsonBridge] Selected config: {config.shortName}");
+            DebugHelper.Log($"[JsonBridge] Selected config: {config.shortName}", "_");
         }
 
         public override async Task OnAccept()
@@ -128,6 +128,34 @@ namespace fivepd.json
                 {
                     spawnedVictims = await VictimSpawner.SpawnVictimsAsync(config.victims, spawnBase);
                 }
+
+                if (config.questions != null && config.questions.Count > 0)
+                {
+                    var pedQuestions = new List<PedQuestion>();
+
+                    foreach (var q in config.questions)
+                    {
+                        if (!string.IsNullOrWhiteSpace(q.question) && q.answers?.Count > 0)
+                        {
+                            pedQuestions.Add(new PedQuestion
+                            {
+                                Question = q.question,
+                                Answers = q.answers
+                            });
+                        }
+                    }
+
+                    if (pedQuestions.Count == 1)
+                    {
+                        AddPedQuestion(null, pedQuestions[0]); // Applies globally
+                    }
+                    else if (pedQuestions.Count > 1)
+                    {
+                        AddPedQuestions(null, pedQuestions.ToArray());
+                    }
+
+                    DebugHelper.Log($"[JsonBridge] Added {pedQuestions.Count} ped question(s) to menu", "INFO");
+                }
             }
             catch (Exception ex)
             {
@@ -175,11 +203,15 @@ namespace fivepd.json
                     {
                         DebugHelper.Log($"[JsonBridge] Applying behavior {s.Behavior}");
                         SuspectBehavior.HandleBehavior(s.Ped, s.Behavior);
-                        if (s.Behavior.ToLower().Contains("flee"))
+                        if (config.pursuit == true)
                         {
                             var pursuit = Pursuit.RegisterPursuit(s.Ped);
-                            pursuit.Init(true, 35f, 50f, true);
+                            bool isVehiclePursuit = s.Ped.IsInVehicle();
+
+                            pursuit.Init(isVehiclePursuit, 35f, 50f, true);
                             pursuit.ActivatePursuit();
+
+                            DebugHelper.Log($"[JsonBridge] Registered {(isVehiclePursuit ? "vehicle" : "foot")} pursuit for ped {s.Ped.Handle}", "INFO");
                         }
                     }
                     catch (Exception ex)

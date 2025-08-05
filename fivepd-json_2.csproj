@@ -65,6 +65,7 @@
     <Compile Include="Logic\SpawnVictims.cs" />
     <Compile Include="models\CalloutConfig.cs" />
     <Compile Include="models\LocationData.cs" />
+    <Compile Include="models\Questions.cs" />
     <Compile Include="models\SuspectConfig.cs" />
     <Compile Include="models\VictimConfig.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

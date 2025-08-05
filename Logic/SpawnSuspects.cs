@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using CitizenFX.Core;
 using CitizenFX.Core.Native;
 using FivePD.API;
+using FivePD.API.Utils;
 using fivepd_json.Helpers;
 using fivepd_json.models;
 
@@ -27,9 +28,8 @@ namespace fivepd_json.Logic
 
             foreach (var cfg in configs)
             {
-                // Generate small random offset within ~5 meters
                 var angle = rand.NextDouble() * 2 * Math.PI;
-                var distance = rand.NextDouble() * 5.0; // 0–5 meters
+                var distance = rand.NextDouble() * 5.0; // 0–5 meters away
                 var offsetX = Math.Cos(angle) * distance;
                 var offsetY = Math.Sin(angle) * distance;
 
@@ -59,9 +59,8 @@ namespace fivepd_json.Logic
         }
 
 
-        private static async Task<SpawnedSuspect> CreatePedWithConfig(SuspectConfig cfg, Vector3 position)
+        private static async Task<SpawnedSuspect> CreatePedWithConfig(SuspectConfig cfg, Vector3 position, Dictionary<string, Vehicle> sharedVehicles = null)
         {
-            Vehicle vehicle = null;
             var pedModel = new Model(cfg.pedModel ?? GetRandomPedModel());
             await pedModel.Request(3000);
             if (!pedModel.IsLoaded) return null;
@@ -80,15 +79,61 @@ namespace fivepd_json.Logic
                 ped.Weapons.Give(weaponHash, 60, true, true);
             }
 
-            if (!string.IsNullOrEmpty(cfg.vehicleModel))
+            Vehicle vehicle = null;
+
+            if (!string.IsNullOrEmpty(cfg.vehicleId) && sharedVehicles?.ContainsKey(cfg.vehicleId) == true)
+            {
+                vehicle = sharedVehicles[cfg.vehicleId];
+            }
+            else if (!string.IsNullOrEmpty(cfg.vehicleModel))
             {
                 var vehicleModel = new Model(cfg.vehicleModel);
                 await vehicleModel.Request(3000);
                 if (vehicleModel.IsLoaded)
                 {
                     vehicle = await Utilities.SpawnVehicle(vehicleModel, ped.Position, cfg.heading);
-                    Utilities.ExcludeVehicleFromTrafficStop(vehicle.NetworkId, true);
-                    ped.SetIntoVehicle(vehicle, VehicleSeat.Driver);
+
+                    bool exclude = cfg.excludeFromTrafficStop ?? true;
+                    Utilities.ExcludeVehicleFromTrafficStop(vehicle.NetworkId, exclude);
+                }
+
+            }
+
+            if (vehicle != null)
+            {
+                VehicleSeat targetSeat = cfg.seatIndex.HasValue ? (VehicleSeat)cfg.seatIndex.Value : VehicleSeat.Any;
+
+                if (targetSeat != VehicleSeat.Any && vehicle.IsSeatFree(targetSeat))
+                {
+                    ped.SetIntoVehicle(vehicle, targetSeat);
+                }
+                else
+                {
+                    VehicleSeat[] fallbackSeats = {
+            VehicleSeat.RightFront,
+            VehicleSeat.LeftRear,
+            VehicleSeat.RightRear,
+            VehicleSeat.ExtraSeat1,
+            VehicleSeat.ExtraSeat2,
+            VehicleSeat.ExtraSeat3,
+            VehicleSeat.ExtraSeat4
+        };
+
+                    bool assigned = false;
+                    foreach (var seat in fallbackSeats)
+                    {
+                        if (vehicle.IsSeatFree(seat))
+                        {
+                            ped.SetIntoVehicle(vehicle, seat);
+                            assigned = true;
+                            break;
+                        }
+                    }
+
+                    if (!assigned)
+                    {
+                        DebugHelper.Log($"No available seats for ped {ped.Handle} in vehicle {vehicle.Handle}", "WARN");
+                    }
                 }
             }
 
@@ -100,16 +145,16 @@ namespace fivepd_json.Logic
             };
         }
 
+
         private static string GetRandomPedModel()
         {
-            string[] models =
-            {
-                "a_m_y_skater_01",
-                "a_m_y_stlat_01",
-                "a_m_m_business_01",
-                "g_m_y_mexgang_01"
-            };
-            return models[new Random().Next(models.Length)];
+            PedHash pedHash = RandomUtils.GetRandomPed();
+            return pedHash.ToString();
+        }
+        private static string GetRandomVehicleModel()
+        {
+            VehicleHash vehicleHash = RandomUtils.GetRandomVehicle();
+            return vehicleHash.ToString();
         }
     }
 }

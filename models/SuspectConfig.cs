@@ -13,5 +13,10 @@ namespace fivepd_json.models
         public string vehicleModel { get; set; }
         public float heading { get; set; } = 0f;
         public string behavior { get; set; }
+        public string vehicleId { get; set; }
+        public int? seatIndex { get; set; }
+        public bool? excludeFromTrafficStop { get; set; }
+
+
     }
 }

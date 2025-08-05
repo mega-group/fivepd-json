@@ -15,7 +15,7 @@ namespace fivepd_json.Helpers
             _calloutName = calloutName;
         }
 
-        public static void Log(string message, string level)
+        public static void Log(string message, string level = "")
         {
             if (!_debugEnabled) return;
             {
@@ -44,7 +44,7 @@ namespace fivepd_json.Helpers
                         break;
                 }
 
-                Debug.WriteLine($"{color}[{timestamp}] [{level}] {message}");
+                Debug.WriteLine($"{color}[{timestamp}]{(string.IsNullOrWhiteSpace(level) ? "" : $" [{level}]")} {message}");
             }
         }
     }

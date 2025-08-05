@@ -35,7 +35,7 @@ namespace fivepd_json.Helpers
             for (int i = 0; i < 10; i++)
             {
                 double angle = rand.NextDouble() * Math.PI * 2;
-                double distance = rand.Next(30, 80); // realistic distance
+                double distance = rand.Next(30, 80);
 
                 float x = origin.X + (float)(Math.Cos(angle) * distance);
                 float y = origin.Y + (float)(Math.Sin(angle) * distance);

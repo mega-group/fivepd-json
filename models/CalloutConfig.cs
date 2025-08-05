@@ -16,13 +16,15 @@ namespace fivepd_json.models
         public string behavior { get; set; }
         public string vehicleModel { get; set; }
         public float heading { get; set; }
-        public bool autoEnd { get; set; } = true;
-        public bool pursuit { get; set; } = true;
+        public bool autoEnd { get; set; }
+        public bool pursuit { get; set; }
         public float startDistance { get; set; }
         public bool debug { get; set; }
         public List<SuspectConfig> suspects { get; set; }
         public List<VictimConfig> victims { get; set; }
         public LocationData location { get; set; }
         public List<LocationData> locations { get; set; }
+        public List<PedQuestionConfig> questions { get; set; }
+
     }
 }
