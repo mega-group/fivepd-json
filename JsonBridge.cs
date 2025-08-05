@@ -129,33 +129,37 @@ namespace fivepd.json
                     spawnedVictims = await VictimSpawner.SpawnVictimsAsync(config.victims, spawnBase);
                 }
 
-                if (config.questions != null && config.questions.Count > 0)
+                foreach (var suspect in spawnedSuspects)
                 {
-                    var pedQuestions = new List<PedQuestion>();
-
-                    foreach (var q in config.questions)
+                    if (suspect.Questions != null && suspect.Questions.Count > 0)
                     {
-                        if (!string.IsNullOrWhiteSpace(q.question) && q.answers?.Count > 0)
+                        var pedQuestions = new List<PedQuestion>();
+
+                        foreach (var q in suspect.Questions)
                         {
-                            pedQuestions.Add(new PedQuestion
+                            if (!string.IsNullOrWhiteSpace(q.question) && q.answers?.Count > 0)
                             {
-                                Question = q.question,
-                                Answers = q.answers
-                            });
+                                pedQuestions.Add(new PedQuestion
+                                {
+                                    Question = q.question,
+                                    Answers = q.answers
+                                });
+                            }
                         }
-                    }
 
-                    if (pedQuestions.Count == 1)
-                    {
-                        AddPedQuestion(null, pedQuestions[0]); // Applies globally
-                    }
-                    else if (pedQuestions.Count > 1)
-                    {
-                        AddPedQuestions(null, pedQuestions.ToArray());
-                    }
+                        if (pedQuestions.Count == 1)
+                        {
+                            AddPedQuestion(suspect.Ped, pedQuestions[0]);
+                        }
+                        else if (pedQuestions.Count > 1)
+                        {
+                            AddPedQuestions(suspect.Ped, pedQuestions.ToArray());
+                        }
 
-                    DebugHelper.Log($"[JsonBridge] Added {pedQuestions.Count} ped question(s) to menu", "INFO");
+                        DebugHelper.Log($"[JsonBridge] Added {pedQuestions.Count} question(s) to ped {suspect.Ped.Handle}", "INFO");
+                    }
                 }
+
             }
             catch (Exception ex)
             {

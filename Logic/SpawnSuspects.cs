@@ -19,6 +19,7 @@ namespace fivepd_json.Logic
             public Vehicle Vehicle { get; set; }
 
             public string Weapon { get; set; }
+            public List<PedQuestionConfig> Questions { get; set; }
         }
 
         public static async Task<List<SpawnedSuspect>> FromConfig(List<SuspectConfig> configs, Vector3 spawnCenter)
@@ -52,7 +53,8 @@ namespace fivepd_json.Logic
                 weapon = string.IsNullOrEmpty(config.weapon) ? "WEAPON_PISTOL" : config.weapon,
                 vehicleModel = string.IsNullOrEmpty(config.vehicleModel) ? "SULTAN" : config.vehicleModel,
                 heading = config.heading,
-                behavior = string.IsNullOrEmpty(config.behavior) ? "idle" : config.behavior
+                behavior = string.IsNullOrEmpty(config.behavior) ? "idle" : config.behavior,
+                questions = config.questions
             };
 
             return await CreatePedWithConfig(cfg, spawnLocation);
@@ -141,7 +143,8 @@ namespace fivepd_json.Logic
             {
                 Ped = ped,
                 Behavior = cfg.behavior,
-                Vehicle = vehicle
+                Vehicle = vehicle,
+                Questions = cfg.questions
             };
         }
 

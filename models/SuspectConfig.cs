@@ -16,7 +16,6 @@ namespace fivepd_json.models
         public string vehicleId { get; set; }
         public int? seatIndex { get; set; }
         public bool? excludeFromTrafficStop { get; set; }
-
-
+        public List<PedQuestionConfig> questions { get; set; }
     }
 }
