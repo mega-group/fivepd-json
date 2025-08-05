@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using CitizenFX.Core;
 using CitizenFX.Core.Native;
 using FivePD.API;
+using fivepd_json.Helpers;
 
 namespace fivepd_json.Behavior
 {
@@ -15,7 +16,7 @@ namespace fivepd_json.Behavior
         {
             if (ped == null || !ped.Exists())
             {
-                Debug.WriteLine("[SuspectBehavior] ❌ Suspect ped is null or doesn't exist.");
+                DebugHelper.Log("[SuspectBehavior] Suspect ped is null or doesn't exist.");
                 return;
             }
 
@@ -29,18 +30,18 @@ namespace fivepd_json.Behavior
                 }
                 catch (Exception ex)
                 {
-                    Debug.WriteLine($"[SuspectBehavior] ❌ Failed to access Game.PlayerPed: {ex.Message}");
+                    DebugHelper.Log($"[SuspectBehavior] Failed to access Game.PlayerPed: {ex.Message}");
                     return;
                 }
             }
 
             if (playerPed == null || !playerPed.Exists())
             {
-                Debug.WriteLine("[SuspectBehavior] ❌ playerPed is still null or does not exist.");
+                DebugHelper.Log("[SuspectBehavior] playerPed is still null or does not exist.");
                 return;
             }
 
-            Debug.WriteLine($"[JsonBridge] Handling behavior '{behavior}' for ped {ped.Handle} (target: {playerPed.Handle})");
+            DebugHelper.Log($"[JsonBridge] Handling behavior '{behavior}' for ped {ped.Handle} (target: {playerPed.Handle})");
 
             switch ((behavior ?? "").ToLower())
             {
@@ -67,11 +68,11 @@ namespace fivepd_json.Behavior
                     break;
 
                 case "random":
-                    Debug.WriteLine("[SuspectBehavior] Behavior 'random' is not implemented.");
+                    DebugHelper.Log("[SuspectBehavior] Behavior 'random' is not implemented.");
                     break;
 
                 default:
-                    Debug.WriteLine($"[SuspectBehavior] ⚠️ Unknown behavior: {behavior}");
+                    DebugHelper.Log($"[SuspectBehavior] Unknown behavior: {behavior}");
                     break;
             }
         }

@@ -26,7 +26,7 @@ namespace fivepd.json
         private List<Ped> spawnedVictims = new List<Ped>();
         private bool suspectsInitialized = false;
         private Func<Task> suspectMonitorTickHandler;
-
+        
         public JsonBridge()
         {
             config = JsonConfigManager.GetRandomConfig() ?? new CalloutConfig
@@ -39,8 +39,14 @@ namespace fivepd.json
                 behavior = "fight",
                 vehicleModel = "SULTAN",
                 heading = 180f,
-                pursuit = true
+                pursuit = true,
+                debug = false
             };
+
+            if (config.debug == true)
+            {
+                DebugHelper.EnableDebug(true, config.shortName);
+            }
 
             if (config.location != null)
             {
@@ -62,7 +68,7 @@ namespace fivepd.json
             ResponseCode = config.responseCode;
             StartDistance = (config.startDistance > 5) ? config.startDistance : 250f;
 
-            Debug.WriteLine($"[JsonBridge] Selected config: {config.shortName}");
+            DebugHelper.Log($"[JsonBridge] Selected config: {config.shortName}");
         }
 
         public override async Task OnAccept()
@@ -70,7 +76,7 @@ namespace fivepd.json
             spawnedSuspects.Clear();
             spawnedVictims.Clear();
 
-            Debug.WriteLine("[JsonBridge] Callout Accepted:" +
+            DebugHelper.Log("[JsonBridge] Callout Accepted:" +
                 $"\n  shortName: {config.shortName}" +
                 $"\n  description: {config.description}" +
                 $"\n  responseCode: {config.responseCode}" +
@@ -81,10 +87,12 @@ namespace fivepd.json
                 $"\n  heading: {config.heading}" +
                 $"\n  autoEnd: {config.autoEnd}" +
                 $"\n  pursuit: {config.pursuit}" +
+                $"\n  startDistance: {config.startDistance}" +
+                $"\n  debug: {config.debug}" +
                 $"\n  suspects: {(config.suspects?.Count.ToString() ?? "null")}" +
                 $"\n  victims: {(config.victims?.Count.ToString() ?? "null")}" +
                 $"\n  location: {(config.location != null ? $"({config.location.x}, {config.location.y}, {config.location.z})" : "null")}" +
-                $"\n  locations: {(config.locations?.Count.ToString() ?? "null")}"
+                $"\n  locations: {(config.locations?.Count.ToString() ?? "null")}", "SUCCESS"
             );
 
             float groundZ = World.GetGroundHeight(finalLocation);
@@ -107,7 +115,7 @@ namespace fivepd.json
 
                 if (spawnedSuspects.Count == 0)
                 {
-                    Debug.WriteLine("[JsonBridge] ❌ No suspects spawned!");
+                    DebugHelper.Log("[JsonBridge] No suspects spawned!", "WARN");
                     return;
                 }
 
@@ -123,7 +131,7 @@ namespace fivepd.json
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[JsonBridge] Exception during OnAccept spawn: {ex}");
+                DebugHelper.Log($"[JsonBridge] Exception during OnAccept: {ex}", "ERROR");
             }
         }
 
@@ -151,11 +159,11 @@ namespace fivepd.json
                 AssignedPlayers.Add(Game.PlayerPed);
             }
 
-            Debug.WriteLine("[JsonBridge] OnStart triggered.");
+            DebugHelper.Log("[JsonBridge] OnStart triggered.", "SUCCESS");
 
             if (!suspectsInitialized)
             {
-                Debug.WriteLine("[JsonBridge] suspects not initialized, skipping OnStart logic.");
+                DebugHelper.Log("[JsonBridge] suspects not initialized, skipping OnStart logic.", "WARN");
                 return;
             }
 
@@ -165,17 +173,23 @@ namespace fivepd.json
                 {
                     try
                     {
-                        Debug.WriteLine($"[JsonBridge] Applying behavior {s.Behavior}");
+                        DebugHelper.Log($"[JsonBridge] Applying behavior {s.Behavior}");
                         SuspectBehavior.HandleBehavior(s.Ped, s.Behavior);
+                        if (s.Behavior.ToLower().Contains("flee"))
+                        {
+                            var pursuit = Pursuit.RegisterPursuit(s.Ped);
+                            pursuit.Init(true, 35f, 50f, true);
+                            pursuit.ActivatePursuit();
+                        }
                     }
                     catch (Exception ex)
                     {
-                        Debug.WriteLine($"[JsonBridge] Error in HandleBehavior: {ex}");
+                        DebugHelper.Log($"[JsonBridge] Error in HandleBehavior: {ex}", "ERROR");
                     }
                 }
                 else
                 {
-                    Debug.WriteLine("[JsonBridge] Suspect Ped is null or does not exist.");
+                    DebugHelper.Log("[JsonBridge] Suspect Ped is null or does not exist.", "WARN");
                 }
             }
 
@@ -189,7 +203,7 @@ namespace fivepd.json
         public override void OnCancelBefore()
         {
             base.OnCancelBefore();
-            Debug.WriteLine("[JsonBridge] Cleaning up all entities.");
+            DebugHelper.Log("[JsonBridge] Cleaning up all entities.");
 
             try
             {
@@ -209,12 +223,13 @@ namespace fivepd.json
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[JsonBridge] Exception during cleanup: {ex}");
+                DebugHelper.Log($"[JsonBridge] Exception during cleanup: {ex}", "ERROR");
             }
 
             isCalloutFinished = true;
             Tick -= suspectMonitorTickHandler;
-            Debug.WriteLine("[JsonBridge] Entity cleanup complete.");
+            DebugHelper.Log("[JsonBridge] Entity cleanup complete.", "SUCCESS");
+            DebugHelper.EnableDebug(false);
         }
 
         public override void OnCancelAfter()
@@ -234,7 +249,7 @@ namespace fivepd.json
 
         public override void OnPlayerRevokedBackup(Player player)
         {
-            OnCancelBefore(); // cleanup when backup revoked
+            // optional player revoked backup logic
         }
     }
 }

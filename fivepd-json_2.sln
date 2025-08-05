@@ -1,9 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.14.36301.6 d17.14
+VisualStudioVersion = 17.14.36301.6
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "fivepd-json_2", "fivepd-json_2.csproj", "{695BAF66-8E7D-41DD-ABBB-6CF33FB209E9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "fivepd_json_plugin", "..\fivepd_json_plugin\fivepd_json_plugin.csproj", "{C57A8B3E-14B4-4824-8A07-CDC033091214}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{695BAF66-8E7D-41DD-ABBB-6CF33FB209E9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{695BAF66-8E7D-41DD-ABBB-6CF33FB209E9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{695BAF66-8E7D-41DD-ABBB-6CF33FB209E9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C57A8B3E-14B4-4824-8A07-CDC033091214}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C57A8B3E-14B4-4824-8A07-CDC033091214}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C57A8B3E-14B4-4824-8A07-CDC033091214}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C57A8B3E-14B4-4824-8A07-CDC033091214}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

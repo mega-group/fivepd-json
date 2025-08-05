@@ -14,7 +14,7 @@ namespace fivepd_json.Helpers
             if (suspect.IsDead || suspect.IsCuffed)
             {
                 markFinished?.Invoke();
-                Debug.WriteLine("[JsonBridge] Auto-ending callout due to suspect state.");
+                DebugHelper.Log("[JsonBridge] Auto-ending callout due to suspect state.");
                 endCallout?.Invoke();
                 return;
             }

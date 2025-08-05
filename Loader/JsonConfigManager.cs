@@ -27,7 +27,7 @@ namespace fivepd_json.Loader
             var manifestJson = LoadResourceFile(GetCurrentResourceName(), "callouts/json_callouts/manifest.json");
             if (string.IsNullOrEmpty(manifestJson))
             {
-                Debug.WriteLine("[JsonConfigManager] ⚠️ Could not load manifest.json");
+                Debug.WriteLine("[JsonConfigManager] Could not load manifest.json");
                 return;
             }
 
@@ -38,13 +38,13 @@ namespace fivepd_json.Loader
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[JsonConfigManager] ⚠️ Failed to parse manifest.json: {ex.Message}");
+                Debug.WriteLine($"[JsonConfigManager] Failed to parse manifest.json: {ex.Message}");
                 return;
             }
 
             if (files == null || files.Count == 0)
             {
-                Debug.WriteLine("[JsonConfigManager] ⚠️ Manifest.json is empty or invalid");
+                Debug.WriteLine("[JsonConfigManager] Manifest.json is empty or invalid");
                 return;
             }
 
@@ -53,7 +53,7 @@ namespace fivepd_json.Loader
                 var json = LoadResourceFile(GetCurrentResourceName(), $"callouts/json_callouts/{fileName}");
                 if (string.IsNullOrEmpty(json))
                 {
-                    Debug.WriteLine($"[JsonConfigManager] ⚠️ Could not load {fileName}");
+                    Debug.WriteLine($"[JsonConfigManager] Could not load {fileName}");
                     continue;
                 }
 
@@ -63,16 +63,16 @@ namespace fivepd_json.Loader
                     if (cfg != null && !string.IsNullOrEmpty(cfg.shortName))
                     {
                         Configs.Add(cfg);
-                        Debug.WriteLine($"[JsonConfigManager] 📥 Loaded config: {cfg.shortName}");
+                        Debug.WriteLine($"[JsonConfigManager] Loaded config: {cfg.shortName}");
                     }
                     else
                     {
-                        Debug.WriteLine($"[JsonConfigManager] ⚠️ Invalid config in {fileName}");
+                        Debug.WriteLine($"[JsonConfigManager] Invalid config in {fileName}");
                     }
                 }
                 catch (Exception ex)
                 {
-                    Debug.WriteLine($"[JsonConfigManager] 💥 Failed to parse {fileName}: {ex.Message}");
+                    Debug.WriteLine($"[JsonConfigManager] Failed to parse {fileName}: {ex.Message}");
                 }
             }
         }

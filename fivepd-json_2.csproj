@@ -55,6 +55,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Behavior\SuspectBehavior.cs" />
+    <Compile Include="Behavior\VictimBehavior.cs" />
+    <Compile Include="Helpers\Debug.cs" />
     <Compile Include="Helpers\MonitorSuspectState.cs" />
     <Compile Include="Helpers\NearbyLocation.cs" />
     <Compile Include="JsonBridge.cs" />

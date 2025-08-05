@@ -19,6 +19,7 @@ namespace fivepd_json.models
         public bool autoEnd { get; set; } = true;
         public bool pursuit { get; set; } = true;
         public float startDistance { get; set; }
+        public bool debug { get; set; }
         public List<SuspectConfig> suspects { get; set; }
         public List<VictimConfig> victims { get; set; }
         public LocationData location { get; set; }

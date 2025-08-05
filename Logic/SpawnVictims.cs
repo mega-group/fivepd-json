@@ -21,6 +21,7 @@ namespace fivepd_json.Logic
 
                 var spawnPos = NearbyLocation.GetRandomNearbyLocation(origin);
                 var ped = await World.CreatePed(pedModel, spawnPos);
+                DebugHelper.Log("Spawned Victim: " + (ped != null ? ped.Handle.ToString() : "null"));
                 if (ped == null) continue;
 
                 victims.Add(ped);
