@@ -16,7 +16,7 @@ using static fivepd_json.Logic.SpawnSuspects;
 
 namespace fivepd.json
 {
-    [CalloutProperties("json-dynamic", "Mega Group", "1.0")]
+    [CalloutProperties("json-dynamic", "Mega Group", "1.0.0")]
     public class JsonBridge : Callout
     {
         private CalloutConfig config;
@@ -50,17 +50,68 @@ namespace fivepd.json
 
             if (config.location != null)
             {
-                finalLocation = new Vector3(config.location.x, config.location.y, config.location.z);
+                if (config.location.mode != null)
+                {
+                    switch (config.location.mode)
+                    {
+                        case "CurrentPlayerLocation":
+                            finalLocation = NearbyLocation.CurrentPlayerLocation();
+                            break;
+                        case "SafeLocationRandom":
+                            finalLocation = NearbyLocation.GetSafeRandomLocationFarAway();
+                            break;
+                        case "SafeLocationRandomNearPlayer":
+                            finalLocation = NearbyLocation.GetSafeRandomLocationNearby();
+                            break;
+                        case "RandomNearby":
+                            finalLocation = NearbyLocation.GetRandomNearbyLocation();
+                            break;
+                        default:
+                            // fallback to coordinates if mode is unknown
+                            finalLocation = new Vector3(config.location.x, config.location.y, config.location.z);
+                            break;
+                    }
+                }
+                else
+                {
+                    finalLocation = new Vector3(config.location.x, config.location.y, config.location.z);
+                }
             }
             else if (config.locations != null && config.locations.Count > 0)
             {
                 var loc = config.locations[new Random().Next(config.locations.Count)];
-                finalLocation = new Vector3(loc.x, loc.y, loc.z);
+
+                if (loc.mode != null)
+                {
+                    switch (loc.mode)
+                    {
+                        case "CurrentPlayerLocation":
+                            finalLocation = NearbyLocation.CurrentPlayerLocation();
+                            break;
+                        case "SafeLocationRandom":
+                            finalLocation = NearbyLocation.GetSafeRandomLocationFarAway();
+                            break;
+                        case "SafeLocationRandomNearPlayer":
+                            finalLocation = NearbyLocation.GetSafeRandomLocationNearby();
+                            break;
+                        case "RandomNearby":
+                            finalLocation = NearbyLocation.GetRandomNearbyLocation();
+                            break;
+                        default:
+                            finalLocation = new Vector3(loc.x, loc.y, loc.z);
+                            break;
+                    }
+                }
+                else
+                {
+                    finalLocation = new Vector3(loc.x, loc.y, loc.z);
+                }
             }
             else
             {
                 finalLocation = NearbyLocation.GetSafeRandomLocationFarAway();
             }
+
             Location = finalLocation;
             InitInfo(finalLocation);
             ShortName = config.shortName;

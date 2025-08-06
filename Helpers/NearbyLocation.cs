@@ -19,6 +19,10 @@ namespace fivepd_json.Helpers
             );
         }
 
+        public static Vector3 CurrentPlayerLocation()
+        {
+            return Game.Player.Character?.Position ?? new Vector3(0f, 0f, 72f);
+        }
         public static Vector3 GetRandomNearbyLocation(Vector3 origin)
         {
             var rand = new Random();
@@ -80,10 +84,17 @@ namespace fivepd_json.Helpers
                 bool found = API.GetSafeCoordForPed(x, y, z, true, ref safeCoord, 0);
 
                 if (found)
-                    return safeCoord;
+                {
+                    float waterHeight = 0f;
+                    bool isWater = API.GetWaterHeight(safeCoord.X, safeCoord.Y, safeCoord.Z, ref waterHeight);
+
+                    if (!isWater || safeCoord.Z > waterHeight + 1.0f)
+                        return safeCoord;
+                }
             }
 
             return origin + new Vector3(300, 0, 0);
         }
+
     }
 }

@@ -11,5 +11,6 @@ namespace fivepd_json.models
         public float x { get; set; }
         public float y { get; set; }
         public float z { get; set; }
+        public string mode { get; set; }
     }
 }
