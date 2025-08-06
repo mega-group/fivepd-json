@@ -44,7 +44,8 @@ namespace fivepd_json.Helpers
                         break;
                 }
 
-                Debug.WriteLine($"{color}[{timestamp}]{(string.IsNullOrWhiteSpace(level) ? "" : $" [{level}]")} {message}");
+                var cleanLevel = string.IsNullOrWhiteSpace(level) || level == "_" ? "" : $" [{level}]";
+                Debug.WriteLine($"{color}[{timestamp}]{cleanLevel} {message}");
             }
         }
     }

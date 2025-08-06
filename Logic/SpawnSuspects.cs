@@ -89,18 +89,28 @@ namespace fivepd_json.Logic
             {
                 vehicle = sharedVehicles[cfg.vehicleId];
             }
-            else if (!string.IsNullOrEmpty(cfg.vehicleModel))
+            else
             {
-                var vehicleModel = new Model(cfg.vehicleModel);
-                await vehicleModel.Request(3000);
-                if (vehicleModel.IsLoaded)
-                {
-                    vehicle = await Utilities.SpawnVehicle(vehicleModel, ped.Position, cfg.heading);
+                string modelName = cfg.vehicleModel;
 
-                    bool exclude = cfg.excludeFromTrafficStop ?? true;
-                    Utilities.ExcludeVehicleFromTrafficStop(vehicle.NetworkId, exclude);
+                if (string.Equals(modelName, "random", StringComparison.OrdinalIgnoreCase))
+                {
+                    modelName = GetRandomVehicleModel();
                 }
 
+                if (!string.IsNullOrEmpty(modelName))
+                {
+                    var vehicleModel = new Model(modelName);
+                    await vehicleModel.Request(3000);
+
+                    if (vehicleModel.IsLoaded)
+                    {
+                        vehicle = await Utilities.SpawnVehicle(vehicleModel, ped.Position, cfg.heading);
+
+                        bool exclude = cfg.excludeFromTrafficStop ?? true;
+                        Utilities.ExcludeVehicleFromTrafficStop(vehicle.NetworkId, exclude);
+                    }
+                }
             }
 
             if (vehicle != null)

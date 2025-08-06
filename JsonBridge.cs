@@ -67,7 +67,6 @@ namespace fivepd.json
                             finalLocation = NearbyLocation.GetRandomNearbyLocation();
                             break;
                         default:
-                            // fallback to coordinates if mode is unknown
                             finalLocation = new Vector3(config.location.x, config.location.y, config.location.z);
                             break;
                     }
@@ -183,7 +182,7 @@ namespace fivepd.json
                 {
                     if (suspect.PedData?.Count > 0)
                     {
-                        var defaultPedData = await FivePD.API.Utilities.GetPedData(suspect.Ped.NetworkId);
+                        var defaultPedData = await Utilities.GetPedData(suspect.Ped.NetworkId);
                         var cfg = suspect.PedData[0];
                         var pedData = await suspect.Ped.GetData();
 
@@ -251,13 +250,8 @@ namespace fivepd.json
                                 pedData.Items.Add(new Item { Name = item.Name, IsIllegal = item.IsIllegal });
                         }
 
-                        if (cfg.violations != null)
-                        {
-                            foreach (var v in cfg.violations)
-                                pedData.Violations.Add(new Violation { Offence = v.Offence, Charge = v.Charge });
-                        }
-
                         suspect.Ped.SetData(pedData);
+                        Utilities.SetPedData(suspect.Ped.NetworkId, pedData);
                         DebugHelper.Log($"[JsonBridge] Applied PedData to {suspect.Ped.Handle}:\n" +
     $"- Name: {pedData.FirstName} {pedData.LastName}\n" +
     $"- DOB: {pedData.DateOfBirth}, Age: {pedData.Age}, Gender: {pedData.Gender}\n" +
@@ -273,7 +267,7 @@ namespace fivepd.json
     $"- Items: {string.Join(", ", pedData.Items.Select(i => $"{i.Name} ({(i.IsIllegal ? "Illegal" : "Legal")})"))}\n" +
     $"- Violations: {string.Join(", ", pedData.Violations.Select(v => $"{v.Offence} ({v.Charge})"))}",
     "INFO");
-                        DebugHelper.Log($"[JsonBridge] Full PedData JSON:\n{JsonConvert.SerializeObject(pedData, Formatting.Indented)}", "DEBUG");
+                        DebugHelper.Log($"[JsonBridge] Full PedData JSON:\n{JsonConvert.SerializeObject(defaultPedData, Formatting.Indented)}", "DEBUG");
                     }
 
                     if (suspect.Vehicle != null && suspect.VehicleData?.Count > 0)
@@ -304,6 +298,7 @@ namespace fivepd.json
                         }
 
                         suspect.Vehicle.SetData(vehData);
+                        Utilities.SetVehicleData(suspect.Vehicle.NetworkId, vehData);
                         DebugHelper.Log($"[JsonBridge] Applied VehicleData to vehicle {suspect.Vehicle.Handle}:\n" +
     $"- License Plate: {vehData.LicensePlate}\n" +
     $"- Insurance: {(vehData.Insurance ? "Valid" : "Invalid")}\n" +
