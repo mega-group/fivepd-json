@@ -5,4 +5,5 @@ author 'Mega Utilities\' Mega Group'
 description 'This resource checks for updates for the callout fivepd-json'
 version '1.0.0'
 
-server_script updater.lua
+
+server_script 'updater.lua'
