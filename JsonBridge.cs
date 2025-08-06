@@ -40,7 +40,6 @@ namespace fivepd.json
                 behavior = "fight",
                 vehicleModel = "SULTAN",
                 heading = 180f,
-                pursuit = true,
                 debug = false
             };
 
@@ -87,7 +86,6 @@ namespace fivepd.json
                 $"\n  vehicleModel: {config.vehicleModel}" +
                 $"\n  heading: {config.heading}" +
                 $"\n  autoEnd: {config.autoEnd}" +
-                $"\n  pursuit: {config.pursuit}" +
                 $"\n  startDistance: {config.startDistance}" +
                 $"\n  debug: {config.debug}" +
                 $"\n  suspects: {(config.suspects?.Count.ToString() ?? "null")}" +
