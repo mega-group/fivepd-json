@@ -54,16 +54,30 @@ namespace fivepd_json.Behavior
                     break;
 
                 case "flee&shoot":
-                    API.GiveWeaponToPed(ped.Handle, (uint)API.GetHashKey("WEAPON_PISTOL"), 100, false, true);
                     ped.Task.FleeFrom(playerPed);
 
                     if (ped.IsInVehicle())
                     {
-                        API.TaskVehicleShootAtPed(ped.Handle, playerPed.Handle, 3.0f);
+                        API.TaskVehicleShootAtPed(ped.Handle, playerPed.Handle, 9000f);
                     }
                     else
                     {
                         ped.Task.ShootAt(playerPed);
+                    }
+                    break;
+
+                case "follow":
+                        ped.Task.GoTo(playerPed);
+                    break;
+
+                case "wander":
+                    ped.Task.WanderAround();
+                    break;
+
+                case "chase":
+                    if (ped.IsInVehicle())
+                    {
+                        API.TaskVehicleChase(ped.Handle, playerPed.Handle);
                     }
                     break;
 

@@ -9,7 +9,6 @@ namespace fivepd_json.models
     public class VictimConfig
     {
         public string pedModel { get; set; }
-        public string dialogue { get; set; }
         public string behavior { get; set; }
     }
 }

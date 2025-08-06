@@ -32,7 +32,7 @@ namespace fivepd_json.Logic
             foreach (var cfg in configs)
             {
                 var angle = rand.NextDouble() * 2 * Math.PI;
-                var distance = rand.NextDouble() * 5.0; // 0–5 meters away
+                var distance = rand.NextDouble() * 5.0;
                 var offsetX = Math.Cos(angle) * distance;
                 var offsetY = Math.Sin(angle) * distance;
 
@@ -75,7 +75,11 @@ namespace fivepd_json.Logic
             ped.BlockPermanentEvents = true;
             ped.IsPersistent = true;
             ped.AlwaysKeepTask = true;
-            ped.AttachBlip();
+
+            if (cfg.pursuit == false)
+            { 
+                ped.AttachBlip();
+            }
 
             if (!string.IsNullOrEmpty(cfg.weapon))
             {
@@ -158,7 +162,8 @@ namespace fivepd_json.Logic
                 Vehicle = vehicle,
                 Questions = cfg.questions,
                 PedData = cfg.PedData != null ? new List<PedDataConfig> { cfg.PedData } : null,
-                VehicleData = cfg.vehicleData != null ? new List<VehicleDataConfig> { cfg.vehicleData } : null
+                VehicleData = cfg.vehicleData != null ? new List<VehicleDataConfig> { cfg.vehicleData } : null,
+                pursuit = cfg.pursuit
             };
         }
 

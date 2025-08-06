@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using CitizenFX.Core;
+using CitizenFX.Core.Native;
 using FivePD.API;
 using FivePD.API.Utils;
 using fivepd_json.Behavior;
@@ -46,6 +47,7 @@ namespace fivepd.json
             if (config.debug == true)
             {
                 DebugHelper.EnableDebug(true, config.shortName);
+                //JsonTemplateGenerator.GenerateBlankCalloutTemplate();
             }
 
             if (config.location != null)
@@ -412,6 +414,7 @@ namespace fivepd.json
                         SuspectBehavior.HandleBehavior(s.Ped, s.Behavior);
                         if (s.pursuit == true)
                         {
+                            DebugHelper.Log($"[JsonBridge] Suspect {s.Ped.Handle} is set to pursue.", "INFO");
                             var pursuit = Pursuit.RegisterPursuit(s.Ped);
                             bool isVehiclePursuit = s.Ped.IsInVehicle();
 
@@ -442,22 +445,39 @@ namespace fivepd.json
         public override void OnCancelBefore()
         {
             base.OnCancelBefore();
-            DebugHelper.Log("[JsonBridge] Cleaning up all entities.", "SUCCESS");
+            DebugHelper.Log("[JsonBridge] Starting entity cleanup...", "SUCCESS");
 
             try
             {
                 foreach (var s in spawnedSuspects)
                 {
                     if (s?.Ped != null && s.Ped.Exists())
+                    {
+                        DebugHelper.Log($"[JsonBridge] Cleaning suspect: {s.Ped.Handle}");
+
+                        s.Ped.IsPersistent = false;
+                        DebugHelper.Log($"[JsonBridge] Set suspect {s.Ped.Handle} as non-persistent.");
+
+                        s.Ped.AttachedBlip?.Delete();
                         s.Ped.Delete();
+                        DebugHelper.Log($"[JsonBridge] Deleted suspect ped {s.Ped.Handle}.");
+                    }
+
                     if (s?.Vehicle != null && s.Vehicle.Exists())
+                    {
+                        s.Vehicle.AttachedBlip?.Delete();
                         s.Vehicle.Delete();
+                        DebugHelper.Log($"[JsonBridge] Deleted suspect vehicle {s.Vehicle.Handle}.");
+                    }
                 }
 
                 foreach (var v in spawnedVictims)
                 {
                     if (v != null && v.Exists())
+                    {
                         v.Delete();
+                        DebugHelper.Log($"[JsonBridge] Deleted victim ped {v.Handle}.");
+                    }
                 }
             }
             catch (Exception ex)
