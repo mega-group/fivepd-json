@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using fivepd_json.net.models;
 
 namespace fivepd_json.models
 {
@@ -14,6 +13,7 @@ namespace fivepd_json.models
         public string vehicleModel { get; set; }
         public float heading { get; set; } = 0f;
         public string behavior { get; set; }
+        public bool pursuit { get; set; }
         public string vehicleId { get; set; }
         public int? seatIndex { get; set; }
         public bool? excludeFromTrafficStop { get; set; }

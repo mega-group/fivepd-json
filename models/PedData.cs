@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace fivepd_json.net.models
+namespace fivepd_json.models
 {
         public class PedDataConfig
         {

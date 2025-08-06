@@ -7,7 +7,6 @@ using FivePD.API;
 using FivePD.API.Utils;
 using fivepd_json.Helpers;
 using fivepd_json.models;
-using fivepd_json.net.models;
 
 namespace fivepd_json.Logic
 {
@@ -19,6 +18,7 @@ namespace fivepd_json.Logic
             public string Behavior { get; set; }
             public Vehicle Vehicle { get; set; }
             public string Weapon { get; set; }
+            public bool pursuit { get; set; }
             public List<PedQuestionConfig> Questions { get; set; }
             public List<PedDataConfig> PedData { get; set; }
             public List<VehicleDataConfig> VehicleData { get; set; }

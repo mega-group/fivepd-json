@@ -10,7 +10,7 @@ using fivepd_json.Helpers;
 using fivepd_json.Loader;
 using fivepd_json.Logic;
 using fivepd_json.models;
-using fivepd_json.net.models;
+using Newtonsoft.Json;
 using static CitizenFX.Core.Native.API;
 using static fivepd_json.Logic.SpawnSuspects;
 
@@ -209,7 +209,22 @@ namespace fivepd.json
                         }
 
                         suspect.Ped.SetData(pedData);
-                        DebugHelper.Log($"[JsonBridge] Applied PedData to {suspect.Ped.Handle}", "INFO");
+                        DebugHelper.Log($"[JsonBridge] Applied PedData to {suspect.Ped.Handle}:\n" +
+    $"- Name: {pedData.FirstName} {pedData.LastName}\n" +
+    $"- DOB: {pedData.DateOfBirth}, Age: {pedData.Age}, Gender: {pedData.Gender}\n" +
+    $"- Address: {pedData.Address}\n" +
+    $"- Warrant: {pedData.Warrant}\n" +
+    $"- BloodAlcoholLevel: {pedData.BloodAlcoholLevel}\n" +
+    $"- UsedDrugs: {string.Join(", ", pedData.UsedDrugs)}\n" +
+    $"- Licenses:\n" +
+    $"  • Driver: {(pedData.DriverLicense?.LicenseStatus)}\n" +
+    $"  • Weapon: {(pedData.WeaponLicense?.LicenseStatus)}\n" +
+    $"  • Hunting: {(pedData.HuntingLicense?.LicenseStatus)}\n" +
+    $"  • Fishing: {(pedData.FishingLicense?.LicenseStatus)}\n" +
+    $"- Items: {string.Join(", ", pedData.Items.Select(i => $"{i.Name} ({(i.IsIllegal ? "Illegal" : "Legal")})"))}\n" +
+    $"- Violations: {string.Join(", ", pedData.Violations.Select(v => $"{v.Offence} ({v.Charge})"))}",
+    "INFO");
+                        DebugHelper.Log($"[JsonBridge] Full PedData JSON:\n{JsonConvert.SerializeObject(pedData, Formatting.Indented)}", "DEBUG");
                     }
 
                     if (suspect.Vehicle != null && suspect.VehicleData?.Count > 0)
@@ -223,8 +238,30 @@ namespace fivepd.json
                                 vehData.Items.Add(new Item { Name = item.Name, IsIllegal = item.IsIllegal });
                         }
 
+                        if (cfg.insurance.HasValue)
+                        {
+                            vehData.Insurance = cfg.insurance.Value;
+                        }
+
+                        if (cfg.registration.HasValue)
+                        {
+                            vehData.Registration = cfg.registration.Value;
+                        }
+
+                        if (!string.IsNullOrWhiteSpace(cfg.licensePlate))
+                        {
+                            vehData.LicensePlate = cfg.licensePlate;
+                            suspect.Vehicle.Mods.LicensePlate = cfg.licensePlate;
+                        }
+
                         suspect.Vehicle.SetData(vehData);
-                        DebugHelper.Log($"[JsonBridge] Applied VehicleData to vehicle {suspect.Vehicle.Handle}", "INFO");
+                        DebugHelper.Log($"[JsonBridge] Applied VehicleData to vehicle {suspect.Vehicle.Handle}:\n" +
+    $"- License Plate: {vehData.LicensePlate}\n" +
+    $"- Insurance: {(vehData.Insurance ? "Valid" : "Invalid")}\n" +
+    $"- Registration: {(vehData.Registration ? "Valid" : "Invalid")}\n" +
+    $"- Items: {string.Join(", ", vehData.Items.Select(i => $"{i.Name} ({(i.IsIllegal ? "Illegal" : "Legal")})"))}",
+    "INFO");
+                        DebugHelper.Log($"[JsonBridge] Full VehicleData JSON:\n{JsonConvert.SerializeObject(vehData, Formatting.Indented)}", "DEBUG");
                     }
 
                     if (suspect.Questions != null && suspect.Questions.Count > 0)
@@ -265,6 +302,8 @@ namespace fivepd.json
                 DebugHelper.Log($"[JsonBridge] Exception during OnAccept: {ex}", "ERROR");
             }
         }
+        
+
 
         private PedData.License CreateLicense(LicenseConfig cfg)
         {
@@ -282,19 +321,26 @@ namespace fivepd.json
 
         private async Task SuspectMonitorTick()
         {
+            var monitorTasks = new List<Task>();
+
             foreach (var suspect in spawnedSuspects)
             {
                 if (suspect?.Ped != null && suspect.Ped.Exists())
                 {
-                    await SuspectMonitor.MonitorAsync(
+                    var task = SuspectMonitor.MonitorAsync(
                         suspect.Ped,
                         () => isCalloutFinished,
                         () => isCalloutFinished = true,
                         EndCallout
                     );
+
+                    monitorTasks.Add(task);
                 }
             }
+
+            await Task.WhenAll(monitorTasks);
         }
+
         public override void OnStart(Ped closest)
         {
             base.OnStart(closest);
@@ -320,7 +366,7 @@ namespace fivepd.json
                     {
                         DebugHelper.Log($"[JsonBridge] Applying behavior {s.Behavior}");
                         SuspectBehavior.HandleBehavior(s.Ped, s.Behavior);
-                        if (config.pursuit == true)
+                        if (s.pursuit == true)
                         {
                             var pursuit = Pursuit.RegisterPursuit(s.Ped);
                             bool isVehiclePursuit = s.Ped.IsInVehicle();
@@ -352,7 +398,7 @@ namespace fivepd.json
         public override void OnCancelBefore()
         {
             base.OnCancelBefore();
-            DebugHelper.Log("[JsonBridge] Cleaning up all entities.");
+            DebugHelper.Log("[JsonBridge] Cleaning up all entities.", "SUCCESS");
 
             try
             {

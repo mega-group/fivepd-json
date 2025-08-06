@@ -7,20 +7,29 @@ namespace fivepd_json.Helpers
     {
         public static async Task MonitorAsync(Ped suspect, System.Func<bool> isFinished, System.Action markFinished, System.Action endCallout)
         {
-            if (isFinished()) return;
+            DebugHelper.Log("[JsonBridge] Starting suspect monitor...");
 
-            if (suspect == null || !suspect.Exists()) return;
-
-            if (suspect.IsDead || suspect.IsCuffed)
+            while (!isFinished())
             {
-                markFinished?.Invoke();
-                DebugHelper.Log("[JsonBridge] Auto-ending callout due to suspect state.");
-                endCallout?.Invoke();
-                return;
+                if (suspect == null || !suspect.Exists())
+                {
+                    DebugHelper.Log("[JsonBridge] Suspect no longer exists.");
+                    break;
+                }
+
+                if (suspect.IsDead || suspect.IsCuffed)
+                {
+                    DebugHelper.Log("[JsonBridge] Suspect is dead or cuffed. Ending callout.");
+                    markFinished?.Invoke();
+                    endCallout?.Invoke();
+                    break;
+                }
+
+                await BaseScript.Delay(1000); // check every second
             }
 
-            await Task.FromResult(0);
-
+            DebugHelper.Log("[JsonBridge] Suspect monitor ended.");
         }
+
     }
 }

@@ -17,7 +17,6 @@ namespace fivepd_json.models
         public string vehicleModel { get; set; }
         public float heading { get; set; }
         public bool autoEnd { get; set; }
-        public bool pursuit { get; set; }
         public float startDistance { get; set; }
         public bool debug { get; set; }
         public List<SuspectConfig> suspects { get; set; }
