@@ -22,7 +22,7 @@ namespace fivepd_json.Loader
 
         public static void LoadConfigs()
         {
-            if (Configs.Count > 0) return; // prevent double load
+            if (Configs.Count > 0) return;
 
             var manifestJson = LoadResourceFile(GetCurrentResourceName(), "callouts/json_callouts/manifest.json");
             if (string.IsNullOrEmpty(manifestJson))
@@ -75,6 +75,20 @@ namespace fivepd_json.Loader
                     Debug.WriteLine($"[JsonConfigManager] Failed to parse {fileName}: {ex.Message}");
                 }
             }
+
+
+            foreach (var cfg in Configs)
+            {
+                if (string.IsNullOrEmpty(cfg.updateURL) || string.IsNullOrEmpty(cfg.version)) continue;
+
+                var argsArray = new object[] { cfg.shortName, cfg.version, cfg.updateURL };
+
+                string payload = JsonConvert.SerializeObject(argsArray);
+                int byteLen = Encoding.UTF8.GetBytes(payload).Length;
+
+                TriggerServerEventInternal("json:checkUpdate", payload, byteLen);
+            }
+
         }
 
         public static CalloutConfig GetRandomConfig()

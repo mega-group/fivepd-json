@@ -8,6 +8,8 @@ namespace fivepd_json.models
 {
     public class CalloutConfig
     {
+        public string updateURL { get; set; }
+        public string version { get; set; }
         public string shortName { get; set; }
         public string description { get; set; }
         public int responseCode { get; set; }
