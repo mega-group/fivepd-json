@@ -7,3 +7,8 @@ version '1.0.0'
 
 
 server_script 'updater.lua'
+
+changelog [[
+- Added update checker for callouts
+- Added changelog support in updater
+]]
