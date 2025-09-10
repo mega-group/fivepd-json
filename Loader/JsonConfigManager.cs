@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text;
 using CitizenFX.Core;
 using fivepd_json.models;
 using Newtonsoft.Json;
@@ -10,7 +11,7 @@ namespace fivepd_json.Loader
     public static class JsonConfigManager
     {
         public static List<CalloutConfig> Configs { get; private set; }
-
+        private static HashSet<string> checkedCallouts = new HashSet<string>();
         static JsonConfigManager()
         {
             Configs = new List<CalloutConfig>();
@@ -71,6 +72,22 @@ namespace fivepd_json.Loader
                 {
                     Debug.WriteLine($"[JsonConfigManager] Failed to parse {fileName}: {ex.Message}");
                 }
+            }
+
+            foreach (var cfg in Configs)
+            {
+                if (checkedCallouts.Contains(cfg.shortName))
+                    continue;
+
+                if (string.IsNullOrEmpty(cfg.updateURL) || string.IsNullOrEmpty(cfg.version)) continue;
+
+                var argsArray = new object[] { cfg.shortName, cfg.version, cfg.updateURL };
+
+                string payload = JsonConvert.SerializeObject(argsArray);
+                int byteLen = Encoding.UTF8.GetBytes(payload).Length;
+                checkedCallouts.Add(cfg.shortName);
+
+                TriggerServerEventInternal("json:checkUpdate", payload, byteLen);
             }
         }
 
