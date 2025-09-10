@@ -1,11 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using CitizenFX.Core;
 using fivepd_json.models;
 using Newtonsoft.Json;
-using CitizenFX.Core;
 using static CitizenFX.Core.Native.API;
 
 namespace fivepd_json.Loader
@@ -75,20 +72,6 @@ namespace fivepd_json.Loader
                     Debug.WriteLine($"[JsonConfigManager] Failed to parse {fileName}: {ex.Message}");
                 }
             }
-
-
-            foreach (var cfg in Configs)
-            {
-                if (string.IsNullOrEmpty(cfg.updateURL) || string.IsNullOrEmpty(cfg.version)) continue;
-
-                var argsArray = new object[] { cfg.shortName, cfg.version, cfg.updateURL };
-
-                string payload = JsonConvert.SerializeObject(argsArray);
-                int byteLen = Encoding.UTF8.GetBytes(payload).Length;
-
-                TriggerServerEventInternal("json:checkUpdate", payload, byteLen);
-            }
-
         }
 
         public static CalloutConfig GetRandomConfig()

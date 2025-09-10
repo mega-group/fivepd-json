@@ -9,8 +9,8 @@ public static class JsonTemplateGenerator
     {
         var template = new CalloutConfig
         {
-            updateURL = "",
-            version = "1.0.0",
+            updateURL = "", // SAVED FOR FUTURE USE
+            version = "1.0.0", // SAVED FOR FUTURE USE
             shortName = "",
             description = "",
             responseCode = 0,
