@@ -47,7 +47,12 @@ namespace fivepd.json
             if (config.debug == true)
             {
                 DebugHelper.EnableDebug(true, config.shortName);
-                //JsonTemplateGenerator.GenerateBlankCalloutTemplate();
+                //JsonTemplateGenerator.GenerateBlankCalloutTemplate(); // Moved to below so it only triggers if CFGGen is also true but you can bypass by turning this on if you wish -- line will be deleted in the future
+            }
+
+            if (config.debug == true && config.CFGGen == true)
+            {
+                JsonTemplateGenerator.GenerateBlankCalloutTemplate();
             }
 
             if (config.location != null)

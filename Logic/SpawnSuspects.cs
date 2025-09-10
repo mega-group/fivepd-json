@@ -54,8 +54,11 @@ namespace fivepd_json.Logic
             var cfg = new SuspectConfig
             {
                 pedModel = string.IsNullOrEmpty(config.pedModel) ? GetRandomPedModel() : config.pedModel,
+                hasBlip = config.hasBlip,
+                blipColor = string.IsNullOrEmpty(config.blipColor) ? "Red" : config.blipColor,
                 weapon = string.IsNullOrEmpty(config.weapon) ? "WEAPON_PISTOL" : config.weapon,
                 vehicleModel = string.IsNullOrEmpty(config.vehicleModel) ? "SULTAN" : config.vehicleModel,
+                vehiclehasBlip = config.vehiclehasBlip,
                 heading = config.heading,
                 behavior = string.IsNullOrEmpty(config.behavior) ? "idle" : config.behavior,
                 questions = config.questions

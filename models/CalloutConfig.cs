@@ -15,12 +15,16 @@ namespace fivepd_json.models
         public int responseCode { get; set; }
         public string weapon { get; set; }
         public string pedModel { get; set; }
+        public bool hasBlip { get; set; }
+        public string blipColor { get; set; }
         public string behavior { get; set; }
         public string vehicleModel { get; set; }
+        public bool vehiclehasBlip { get; set; }
         public float heading { get; set; }
         public bool autoEnd { get; set; }
         public float startDistance { get; set; }
         public bool debug { get; set; }
+        public bool CFGGen { get; set; } // Internal to easily generate config files if needed
         public List<SuspectConfig> suspects { get; set; }
         public List<VictimConfig> victims { get; set; }
         public LocationData location { get; set; }
