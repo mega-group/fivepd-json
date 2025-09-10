@@ -87,7 +87,7 @@ namespace fivepd_json.Loader
                 int byteLen = Encoding.UTF8.GetBytes(payload).Length;
                 checkedCallouts.Add(cfg.shortName);
 
-                TriggerServerEventInternal("json:checkUpdate", payload, byteLen);
+                BaseScript.TriggerServerEvent("json:checkUpdate", cfg.shortName, cfg.version, cfg.updateURL);
             }
         }
 

@@ -454,18 +454,18 @@ namespace fivepd.json
                     if (s?.Ped != null && s.Ped.Exists())
                     {
                         DebugHelper.Log($"[JsonBridge] Cleaning suspect: {s.Ped.Handle}");
+                        s.PedBlip?.Delete();
 
                         s.Ped.IsPersistent = false;
                         DebugHelper.Log($"[JsonBridge] Set suspect {s.Ped.Handle} as non-persistent.");
 
-                        s.Ped.AttachedBlip?.Delete();
                         s.Ped.Delete();
                         DebugHelper.Log($"[JsonBridge] Deleted suspect ped {s.Ped.Handle}.");
                     }
 
                     if (s?.Vehicle != null && s.Vehicle.Exists())
                     {
-                        s.Vehicle.AttachedBlip?.Delete();
+                        s.VehBlip?.Delete();
                         s.Vehicle.Delete();
                         DebugHelper.Log($"[JsonBridge] Deleted suspect vehicle {s.Vehicle.Handle}.");
                     }
